@@ -1,0 +1,31 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row form-container">
+
+    <form class="user-form" action="{% url 'accounts:signin_view' %}" method="post">
+        <h2>Login</h2>
+
+        {% csrf_token %}
+
+        <input type="text" placeholder="Username" name="username" required />
+
+        <input type="password" placeholder="Password" name="password" required />
+
+        <button type="submit" class="btn submit-btn">Login</button>
+
+    </form>
+
+</div>
+
+{% endblock %}
