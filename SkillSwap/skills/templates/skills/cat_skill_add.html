@@ -1,0 +1,33 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2>Enter Skill and category</h2>
+
+  <!-- {% if error %}<p style="color:red">{{ error }}</p>{% endif %} -->
+  <form method="post" action="{% url 'skills:cat_skill_add' %}">
+
+    {% csrf_token %}
+
+    <label>Skill name</label><br>
+    <input type="text" name="skill" placeholder="ex: Python">
+    <br><br>
+
+    <label>Level 1 (root category)</label><br>
+    <input type="text" name="level1" placeholder="ex: Tech">
+    <br><br>
+
+    <label>Level 2 (subcategory)</label><br>
+    <input type="text" name="level2" placeholder="ex: Programming">
+    <br><br>
+
+    <label>Level 3 (sub-subcategory)</label><br>
+    <input type="text" name="level3" placeholder="ex: Web Development">
+    <br><br>
+
+    <button type="submit">Save</button>
+  </form>
+
+
+{% endblock %}

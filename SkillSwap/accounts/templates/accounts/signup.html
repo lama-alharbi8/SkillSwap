@@ -21,11 +21,103 @@
 
         <input type="password" placeholder="Password" name="password" required />
 
+         <!-- Level 1 -->
+    <label for="level1">Level 1 Category</label>
+    <select id="level1">
+        <option value="">-- Select Level 1 --</option>
+        {% for c in level1_categories %}
+            <option value="{{ c.id }}">{{ c.category }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Level 2 -->
+    <label for="level2">Level 2 Category</label>
+    <select id="level2">
+        <option value="">-- Select Level 2 --</option>
+    </select>
+
+    <!-- Level 3 -->
+    <label for="level3">Level 3 Category</label>
+    <select id="level3">
+        <option value="">-- Select Level 3 --</option>
+    </select>
+
+    <!-- Skill -->
+    <label for="skill">Skill</label>
+    <select id="skill" name="skill">
+        <option value="">-- Select Skill --</option>
+    </select>
+
+
         <button type="submit" class="btn submit-btn">Sign up</button>
 
     </form>
 
 </div>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const level1 = document.getElementById('level1');
+    const level2 = document.getElementById('level2');
+    const level3 = document.getElementById('level3');
+    const skill = document.getElementById('skill');
+
+    function clearSelect(select) {
+        select.innerHTML = '<option value="">-- Select --</option>';
+    }
+
+    level1.addEventListener('change', function() {
+        clearSelect(level2);
+        clearSelect(level3);
+        clearSelect(skill);
+        if(!this.value) return;
+
+        fetch(`/accounts/ajax/categories/${this.value}/children/`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = c.category;
+                    level2.appendChild(option);
+                });
+            });
+    });
+
+    level2.addEventListener('change', function() {
+        clearSelect(level3);
+        clearSelect(skill);
+        if(!this.value) return;
+
+        fetch(`/accounts/ajax/categories/${this.value}/children/`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = c.category;
+                    level3.appendChild(option);
+                });
+            });
+    });
+
+    level3.addEventListener('change', function() {
+        clearSelect(skill);
+        if(!this.value) return;
+
+        fetch(`/accounts/ajax/categories/${this.value}/skills/`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = s.skill;
+                    skill.appendChild(option);
+                });
+            });
+    });
+});
+</script>
 
 {% endblock %}
