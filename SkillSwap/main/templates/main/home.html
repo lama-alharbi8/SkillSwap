@@ -5,27 +5,193 @@
 
 {% block style %}
 <style>
-  body {
-    background-image: url("{% static 'images/home-bg.jpg' %}");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 100vh;
-  }
+    body {
+        background-image: url("{% static 'images/home-bg-2.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 100vh;
+    }
 </style>
 {% endblock %}
 
 
 {% block content %}
-<section class="hero-section rounded d-flex align-items-center">
+<section class="home-page hero-section rounded d-flex align-items-center">
     <div class="container">
         <div class="row justify-content-center text-center text-dark">
             <div class="col-lg-8">
                 <h1 class="display-5 fw-semibold mb-3 py-5">Talent Tokens: Your Skills is The Currency</h1>
+                <a class="btn btn-success rounded-pill px-4 py-2 shadow" href="">Browse Skills</a>
+
+                <div class="container text-center py-5">
+                    <div class="container text-center py-3">
+                        <h2 class="display-6 fw-bold mb-4 text-dark">Featured Skills</h2>
+                        <p class="mb-5">Swap skills in these popular categories</p>
+
+                        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+                            <!-- Programming -->
+                            <div class="col">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="skill-item p-3 align-items-center">
+                                        <div class="icon-circle icon-circle-blue mb-3 mx-auto">
+                                            <i class="fa-solid fa-code fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="text-center mb-0">Programming</h5>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Languages -->
+                            <div class="col">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="skill-item p-3 align-items-center">
+                                        <div class="icon-circle icon-circle-yellow mb-3 mx-auto">
+                                            <i class="fa-solid fa-language fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="text-center mb-0">Languages</h5>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Design -->
+                            <div class="col">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="skill-item p-3 align-items-center">
+                                        <div class="icon-circle icon-circle-pink mb-3 mx-auto">
+                                            <i class="fa-solid fa-paintbrush fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="text-center mb-0">Design</h5>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Music -->
+                            <div class="col">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="skill-item p-3 align-items-center">
+                                        <div class="icon-circle icon-circle-purple mb-3 mx-auto">
+                                            <i class="fa-solid fa-music fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="text-center mb-0">Music</h5>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Cooking -->
+                            <div class="col">
+                                <a href="#" class="text-decoration-none">
+                                    <div class="skill-item p-3 align-items-center">
+                                        <div class="icon-circle icon-circle-green mb-3 mx-auto">
+                                            <i class="fa-solid fa-utensils fa-3x text-white"></i>
+                                        </div>
+                                        <h5 class="text-center mb-0">Cooking</h5>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
+    
 </section>
-{% endblock %}
+<section class="py-5 my-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3 text-white">The SkillSwap Process</h2>
+            <p class="lead text-white-50 mb-0">A modern approach to skill exchange</p>
+        </div>
 
+        <div class="row g-4 justify-content-center">
+            <!-- Step 1 - Flip Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <!-- Front Side -->
+                        <div class="flip-card-front text-center p-5">
+                            <div class="step-icon-front mb-4">
+                                <i class="fa-solid fa-user-plus fa-3x text-primary"></i>
+                            </div>
+                            <h3 class="fw-bold text-white mb-3">List Your Skills</h3>
+                            <p class="text-white-70">What can you teach others?</p>
+                            <div class="mt-4">
+                                <span class="badge bg-primary rounded-pill px-3 py-2">Step 1</span>
+                            </div>
+                        </div>
+                        <!-- Back Side -->
+                        <div class="flip-card-back text-center p-5">
+                            <h4 class="fw-bold text-white mb-3">Create Profile</h4>
+                            <p class="text-white-70">Share your expertise in programming, languages, cooking, or any skill you have. Be specific about what you can offer.</p>
+                            <div class="mt-4">
+                                <span class="badge bg-light text-dark rounded-pill px-3 py-2">Tap for details</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 - Flip Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front text-center p-5">
+                            <div class="step-icon-front mb-4">
+                                <i class="fa-solid fa-search fa-3x text-success"></i>
+                            </div>
+                            <h3 class="fw-bold text-white mb-3">Find Match</h3>
+                            <p class="text-white-70">Discover perfect swap partners</p>
+                            <div class="mt-4">
+                                <span class="badge bg-success rounded-pill px-3 py-2">Step 2</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back text-center p-5">
+                            <h4 class="fw-bold text-white mb-3">Smart Matching</h4>
+                            <p class="text-white-70">Our algorithm suggests users who have what you need and need what you have. Filter by skill, location, or availability.</p>
+                            <div class="mt-4">
+                                <span class="badge bg-light text-dark rounded-pill px-3 py-2">Tap for details</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 - Flip Card -->
+            <div class="col-md-6 col-lg-4">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front text-center p-5">
+                            <div class="step-icon-front mb-4">
+                                <i class="fa-solid fa-handshake fa-3x text-warning"></i>
+                            </div>
+                            <h3 class="fw-bold text-white mb-3">Swap Skills</h3>
+                            <p class="text-white-70">Exchange and grow together</p>
+                            <div class="mt-4">
+                                <span class="badge bg-warning rounded-pill px-3 py-2">Step 3</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back text-center p-5">
+                            <h4 class="fw-bold text-white mb-3">Skill Exchange</h4>
+                            <p class="text-white-70">Connect via chat, schedule sessions, and exchange skills. Track progress and leave reviews to build your reputation.</p>
+                            <div class="mt-4">
+                                <span class="badge bg-light text-dark rounded-pill px-3 py-2">Tap for details</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Button -->
+        <div class="text-center mt-5">
+            <a href="#" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-lg">
+                <i class="fa-solid fa-rocket me-2"></i>Start Your First Swap
+            </a>
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock %}

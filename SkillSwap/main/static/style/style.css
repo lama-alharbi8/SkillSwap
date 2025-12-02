@@ -23,11 +23,7 @@
     font-size: 1.2rem !important;
     color: rgb(18, 0, 121) !important;
     /* transform: skewX(20deg); */
-    transition: all 0.2s ease-in;
-    font-family: "Edu SA Beginner", cursive;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
+    
 }
 
 .nav-link:hover {
@@ -39,3 +35,63 @@
 .hero-section h1{
     color: rgb(18, 0, 121);
 }
+
+.home-page h2,p,h5{
+    color: rgb(18, 0, 121) !important;
+
+}
+
+.icon-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+}
+
+.icon-circle-blue {
+    background: linear-gradient(135deg, #2195f3, #1976d2);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+    
+}
+
+.icon-circle-yellow {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.icon-circle-pink {
+    background: linear-gradient(135deg, #e91e63, #c2185b);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+}
+
+.icon-circle-purple {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+}
+
+.icon-circle-green {
+    background: linear-gradient(135deg, #4caf50, #388e3c);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+/* Hover Effects */
+.skill-item {
+    transition: all 0.3s ease;
+}
+
+.skill-item:hover .icon-circle {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.skill-item:hover h5 {
+    transform: translateY(5px);
+}
+
+.skill-item h5 {
+    transition: all 0.3s ease;
+}
+
