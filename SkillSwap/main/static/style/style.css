@@ -1,0 +1,41 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.navbar-brand h2 {
+    font-family: "Comforter Brush", cursive;
+    font-weight: 400;
+    font-style: normal;
+    color: rgb(18, 0, 121);
+    font-size: 3.5rem;
+    transform: skewX(25deg);
+    transition: all 0.2s ease-in;
+}
+
+.navbar-brand h2:hover {
+    transform: translate(5%, -5%) skewX(20deg);
+    text-shadow: -0.3rem 0.2rem 0px rgb(7, 138, 0);
+}
+
+.nav-link {
+    font-size: 1.2rem !important;
+    color: rgb(18, 0, 121) !important;
+    /* transform: skewX(20deg); */
+    transition: all 0.2s ease-in;
+    font-family: "Edu SA Beginner", cursive;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+}
+
+.nav-link:hover {
+    transform: translate(5%, -5%) skewX(10deg);
+    text-shadow: -0.2rem 0.1rem 0px rgb(7, 138, 0);
+
+}
+
+.hero-section h1{
+    color: rgb(18, 0, 121);
+}

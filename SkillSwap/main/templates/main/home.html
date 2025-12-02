@@ -1,98 +1,31 @@
 {% extends 'main/base.html' %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home - SkillSwap{% endblock %}
+
+{% block style %}
+<style>
+  body {
+    background-image: url("{% static 'images/home-bg.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+</style>
+{% endblock %}
+
 
 {% block content %}
-
-
-
-<h1>Browse Skill Swap Profiles</h1>
-
-<main class="browser-wrap">
-
-    <!-- FEATURED PROFILE -->
-    <aside class="featured">
-        <div class="user-row">
-            <div class="avatar">U</div>
-            <div>
-                <div class="username">username123</div>
-                <div style="font-size:12px;opacity:0.7">Member since 2025</div>
+<section class="hero-section rounded d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center text-center text-dark">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-semibold mb-3 py-5">Talent Tokens: Your Skills is The Currency</h1>
             </div>
         </div>
+    </div>
 
-        <div>
-            <div class="section-title">My Skills:</div>
-            <div class="tags">
-                <span class="tag">Cooking</span>
-                <span class="tag">Photography</span>
-                <span class="tag">HTML</span>
-            </div>
-        </div>
-
-        <div>
-            <div class="section-title">Looking to Swap With:</div>
-            <div class="tags">
-                <span class="tag">Yoga Lessons</span>
-                <span class="tag">Graphic Design</span>
-            </div>
-        </div>
-
-        <div style="margin-top:auto;display:flex;gap:8px;justify-content:space-between">
-            <button class="btn">Message</button>
-            <button class="btn">View More</button>
-        </div>
-    </aside>
-
-
-    <!-- PROFILE GRID -->
-    <section class="grid">
-
-        <article class="card">
-            <div class="mini-row">
-                <div class="mini-avatar">M1</div>
-                <div>
-                    <div class="name">Mariam</div>
-                    <div style="font-size:12px;opacity:0.7">Riyadh</div>
-                </div>
-            </div>
-            <div class="small-tags">
-                <span class="tag">Crochet</span>
-                <span class="tag">Cooking</span>
-            </div>
-        </article>
-
-        <article class="card">
-            <div class="mini-row">
-                <div class="mini-avatar">A2</div>
-                <div>
-                    <div class="name">Ahmed</div>
-                    <div style="font-size:12px;opacity:0.7">Jeddah</div>
-                </div>
-            </div>
-            <div class="small-tags">
-                <span class="tag">Photography</span>
-                <span class="tag">Video Editing</span>
-            </div>
-        </article>
-
-        <article class="card">
-            <div class="mini-row">
-                <div class="mini-avatar">S3</div>
-                <div>
-                    <div class="name">Sarah</div>
-                    <div style="font-size:12px;opacity:0.7">Dammam</div>
-                </div>
-            </div>
-            <div class="small-tags">
-                <span class="tag">Drawing</span>
-                <span class="tag">UI/UX</span>
-            </div>
-        </article>
-
-        <!-- Add more cards as needed... -->
-
-    </section>
-</main>
-
+</section>
 {% endblock %}
+

@@ -3,13 +3,7 @@
 
 {% block content %}
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-success">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
+{% block title %} Sign In - SkillSwap {% endblock %}
 
 <div class="row form-container">
 
