@@ -41,6 +41,9 @@ def signin_view(request : HttpRequest):
      
     return render(request, "accounts/signin.html", {})
 
+def profile_form_view(request : HttpRequest):
+    return render(request, "accounts/profile_form.html")
+
 
 def log_out_view(request : HttpRequest):
     
