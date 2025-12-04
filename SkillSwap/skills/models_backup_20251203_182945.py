@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.forms import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 
@@ -43,7 +43,7 @@ class OfferedSkill(models.Model):
     description = models.TextField(blank=True, help_text='Describe the service you can provide')
     availability = models.CharField(max_length=200, blank=True, help_text='e.g., Weekends, Evenings')
     hourly_rate_equivalent = models.DecimalField(
-        max_digits=7,
+        max_digits=8,  # Increased from 6 to allow higher rates
         decimal_places=2,  
         default=25.00,
         validators=[MinValueValidator(1)],  # Added validator
@@ -78,7 +78,7 @@ class NeededSkill(models.Model):
         default='medium'
     )
     max_hourly_rate = models.DecimalField(
-        max_digits=7,
+        max_digits=8,  # Increased from 6 to match OfferedSkill
         decimal_places=2, 
         null=True, 
         blank=True,
@@ -122,17 +122,17 @@ class SkillExchange(models.Model):
     exchange_type = models.CharField(max_length=20, choices=EXCHANGE_TYPES, default='value')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
-    initiator_hourly_rate = models.DecimalField(max_digits=7, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    responder_hourly_rate = models.DecimalField(max_digits=7, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    calculated_ratio = models.DecimalField(max_digits=15, decimal_places=5, default=1.0, help_text='Ratio of hours needed for fair exchange')
+    initiator_hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    responder_hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    calculated_ratio = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, help_text='Ratio of hours needed for fair exchange')
 
-    initiator_hours_required = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
-    responder_hours_required = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
-    total_value = models.DecimalField(max_digits=9, decimal_places=2, default=0, help_text="Total value of exchange in $ equivalent")
+    initiator_hours_required = models.DecimalField(max_digits=5, decimal_places=1, default=1.0, validators=[MinValueValidator(0.1)])
+    responder_hours_required = models.DecimalField(max_digits=5, decimal_places=1, default=1.0, validators=[MinValueValidator(0.1)])
+    total_value = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total value of exchange in $ equivalent")
     
     # New fields for better fairness tracking
     is_balanced = models.BooleanField(default=False, help_text="Whether the exchange is financially balanced")
-    imbalance_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0, help_text="Monetary value difference if not perfectly balanced")
+    imbalance_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Monetary value difference if not perfectly balanced")
     
     terms = models.TextField(blank=True, help_text="Specific terms and conditions")
 
@@ -211,12 +211,12 @@ class SkillExchange(models.Model):
                 # A's work is more valuable
                 # 1 hour of A = ratio hours of B
                 self.initiator_hours_required = 1.0
-                self.responder_hours_required = round(ratio, 2)  # Round to 1 decimal
+                self.responder_hours_required = round(ratio, 1)  # Round to 1 decimal
             else:
                 # B's work is more valuable
                 # 1 hour of B = 1/ratio hours of A
                 self.responder_hours_required = 1.0
-                self.initiator_hours_required = round(1 / ratio, 2)  # Round to 1 decimal
+                self.initiator_hours_required = round(1 / ratio, 1)  # Round to 1 decimal
             
             # Calculate total value (should be equal from both perspectives)
             initiator_value = rate_a * float(self.initiator_hours_required)
@@ -258,12 +258,8 @@ class SkillExchange(models.Model):
     
     def save(self, *args, **kwargs):
         """Override save to calculate fair exchange and validate"""
-        # Check if we should skip calculation (for testing unfair exchanges)
-        skip_calculation = kwargs.pop('skip_calculation', False)
-        
-        # Always calculate fair exchange if we have both skills AND not skipping
-        if (not skip_calculation and self.skill_from_initiator_id and 
-            self.skill_from_responder_id):
+        # Always calculate fair exchange if we have both skills
+        if self.skill_from_initiator_id and self.skill_from_responder_id:
             self.calculate_fair_exchange()
         
         # Run validation
@@ -413,7 +409,7 @@ class ExchangeChain(models.Model):
     
     # Chain metrics
     total_participants = models.IntegerField(default=0)
-    total_hours = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    total_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     created_by = models.ForeignKey(
         User, 
@@ -493,8 +489,8 @@ class ChainLink(models.Model):
     receives_skill = models.ForeignKey(OfferedSkill, on_delete=models.CASCADE, related_name='received_in_chains')
     
     # Hours involved
-    hours_given = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
-    hours_received = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
+    hours_given = models.DecimalField(max_digits=5, decimal_places=1, default=1.0, validators=[MinValueValidator(0.1)])
+    hours_received = models.DecimalField(max_digits=5, decimal_places=1, default=1.0, validators=[MinValueValidator(0.1)])
     
     # Position in chain (0, 1, 2, ...)
     position = models.IntegerField(default=0)
