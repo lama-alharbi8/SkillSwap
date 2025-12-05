@@ -4,58 +4,61 @@
 {% block content %}
 
 <div class="form-container">
-
-    <form class="user-form" action="{% url 'accounts:signup_view' %}" method="post">
-
+    <form class="user-form" action="{% url 'accounts:signup_view' %}" method="post" enctype="multipart/form-data">
         <h2>Sign Up</h2>
 
         {% csrf_token %}
 
         <input type="email" placeholder="Email" name="email" required />
-
         <input type="text" placeholder="Username" name="username" required />
-
         <input type="text" placeholder="First Name" name="first_name" required />
-
         <input type="text" placeholder="Last Name" name="last_name" required />
-
         <input type="password" placeholder="Password" name="password" required />
 
-         <!-- Level 1 -->
-    <label for="level1">Level 1 Category</label>
-    <select id="level1">
-        <option value="">-- Select Level 1 --</option>
-        {% for c in level1_categories %}
-            <option value="{{ c.id }}">{{ c.category }}</option>
-        {% endfor %}
-    </select>
+        <!-- <label for="bio">Bio</label>
+        <textarea id="bio" name="bio" placeholder="Write something about yourself..." rows="4"></textarea>
 
-    <!-- Level 2 -->
-    <label for="level2">Level 2 Category</label>
-    <select id="level2">
-        <option value="">-- Select Level 2 --</option>
-    </select>
+        <label for="profile_picture">Profile Picture</label>
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" />
 
-    <!-- Level 3 -->
-    <label for="level3">Level 3 Category</label>
-    <select id="level3">
-        <option value="">-- Select Level 3 --</option>
-    </select>
+        <label for="level1">Level 1 Category</label>
+        <select id="level1" name="level1" required>
+            <option value="">-- Select Level 1 --</option>
+            {% for c in level1_categories %}
+                <option value="{{ c.id }}">{{ c.category }}</option>
+            {% endfor %}
+        </select>
 
-    <!-- Skill -->
-    <label for="skill">Skill</label>
-    <select id="skill" name="skill">
-        <option value="">-- Select Skill --</option>
-    </select>
+        <label for="level2">Level 2 Category</label>
+        <select id="level2" name="level2" required>
+            <option value="">-- Select Level 2 --</option>
+            {% for c in level2_categories %}
+                <option value="{{ c.id }}">{{ c.category }}</option>
+            {% endfor %}
+        </select>
 
+        <label for="level3">Level 3 Category</label>
+        <select id="level3" name="level3" required>
+            <option value="">-- Select Level 3 --</option>
+            {% for c in level3_categories %}
+                <option value="{{ c.id }}">{{ c.category }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="skill">Skill</label>
+        <select id="skill" name="skill" required>
+            <option value="">-- Select Skill --</option>
+            {% for s in skills %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+            {% endfor %}
+        </select> -->
 
         <button type="submit" class="btn submit-btn">Sign up</button>
-
     </form>
-
 </div>
 
 
+<!-- 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const level1 = document.getElementById('level1');
@@ -118,6 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 });
-</script>
+</script> -->
 
 {% endblock %}

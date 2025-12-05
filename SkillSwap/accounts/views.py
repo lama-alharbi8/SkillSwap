@@ -1,18 +1,24 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from skills.models import Skill, Category
+from skills.models import Skill, Category, OfferedSkill, NeededSkill  
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from skills.models import Skill, OfferedSkill, NeededSkill
+import json
+from django.utils.safestring import mark_safe
 
 # Create your views here.
 
 def signup_view(request : HttpRequest):
     
-    level1_categories = Category.objects.filter(parent__isnull=True)
-
     if request.method == "POST":
         try:
             new_user = User.objects.create_user(
@@ -22,24 +28,17 @@ def signup_view(request : HttpRequest):
                 first_name = request.POST["first_name"],
                 last_name = request.POST["last_name"],
             )
+
             new_user.save()
-            
-            skill_id = request.POST.get("skill")
-            
-            if skill_id:
-                selected_skill = Skill.objects.get(id = skill_id)
 
             messages.success(request, "Registered User Successfully", "alert-success")
             return redirect("accounts:signin_view")
         except Exception as e: 
             print(e)
     
-    return render(request, "accounts/signup.html", 
-                  {
-                    "level1_categories": level1_categories,
-                      })
-
-
+    return render(request, "accounts/signup.html")
+              
+              
 def signin_view(request : HttpRequest):
     
     if request.method == "POST":
@@ -81,3 +80,94 @@ def category_skills(request : HttpRequest, pk):
         return JsonResponse(data, safe=False)
     except Category.DoesNotExist:
         return JsonResponse([], safe=False)
+    
+    
+def profile_form(request : HttpRequest):
+    
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    all_skills = Skill.objects.order_by('skill')
+    all_skills_data = list(all_skills.values('id', 'skill'))
+    all_skills_json = mark_safe(json.dumps(list(all_skills_data)))
+
+    if request.method == "POST":
+        bio = request.POST.get("bio", "").strip()
+        avatar = request.FILES.get("avatar")
+
+        profile.bio = bio
+        if avatar:
+            profile.avatar = avatar
+        profile.save()
+        
+        
+        offered_ids = [int(x) for x in request.POST.getlist("offered_skills") if x]
+        needed_ids  = [int(x) for x in request.POST.getlist("needed_skills") if x]
+
+        OfferedSkill.objects.filter(user=request.user).delete()
+        NeededSkill.objects.filter(user=request.user).delete()
+
+
+        offered_objs = []
+        for sid in offered_ids:
+            try:
+                Skill.objects.get(id=sid)
+                offered_objs.append(OfferedSkill(user=request.user, skill_id=sid))
+            
+            except (Skill.DoesNotExist, ValueError):
+                continue
+
+        needed_objs = []
+        for sid in needed_ids:
+            try:
+                Skill.objects.get(id=sid)
+                needed_objs.append(NeededSkill(user=request.user, skill_id=sid))
+            
+            except (Skill.DoesNotExist, ValueError):
+                continue
+
+        if offered_objs:
+            OfferedSkill.objects.bulk_create(offered_objs)
+        if needed_objs:
+            NeededSkill.objects.bulk_create(needed_objs)
+            
+        return redirect("accounts:profile_form")
+
+    current_offered = list(Skill.objects.filter(offered_by_users__user=request.user).values_list('id', flat=True))
+    current_needed  = list(Skill.objects.filter(needed_by_users__user=request.user).values_list('id', flat=True))
+
+
+    current_offered_json = mark_safe(json.dumps(list(current_offered)))
+    current_needed_json  = mark_safe(json.dumps(list(current_needed)))
+
+
+    return render(request, "accounts/profile_form.html", {
+        "profile": profile,
+        "all_skills": all_skills,
+        "all_skills_data": all_skills_data,
+        "all_skills_json": all_skills_json,
+        "current_offered": current_offered,
+        "current_needed": current_needed,
+        "current_offered_json": current_offered_json,
+        "current_needed_json": current_needed_json,
+    })
+    
+    
+@login_required
+def user_profile(request : HttpRequest):    
+    profile = get_object_or_404(UserProfile, user=request.user)
+    
+    return render(request, 'accounts/user_profile.html', {'profile': profile})
+
+
+def skills_search(request : HttpRequest):
+    """
+    AJAX endpoint: GET ?q=term
+    Returns JSON list of matching skills: [{id, name}, ...]
+    """
+    q = request.GET.get('q', '').strip()
+    qs = Skill.objects.all()
+    if q:
+        qs = qs.filter(name__icontains=q)
+    qs = qs.order_by('name')[:30] 
+    data = [{"id": s.id, "name": s.name} for s in qs]
+    return JsonResponse({"results": data})

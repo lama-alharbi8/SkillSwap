@@ -32,7 +32,6 @@ class Category(models.Model):
 class Skill(models.Model):
 
     skill = models.CharField(max_length = 128, unique = True)
-    categories = models.ManyToManyField(Category, related_name = 'skills', blank = True)
     
     def __str__(self) -> str:
         return self.skill

@@ -1,0 +1,212 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+
+<div class="profile-page">
+    <div class="profile-left">
+
+        <img src="/static/images/avatar.jpeg" alt="Avatar" class="avatar">
+
+        <span class="text-muted">Since: {{ profile.user.date_joined|date:"F Y" }}</span>
+
+        <div class="skills-section">
+            <h4>My Skills</h4>
+            <div class="skills-grid">
+                {% if offered_skills %}
+                {% for skill in offered_skills %}
+                <div class="skill-tag">
+                    {{ skill.name }}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="empty-message">No skills added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="profile-right">
+
+        <p>{{ profile.user.username }}</p>
+        <p>{{ profile.user.email }}</p>
+        <p>{{ profile.user.first_name }}</p>
+        <p>{{ profile.user.first_last }}</p>
+        <p>{{ profile.bio }}</p>
+
+
+    </div>
+</div>
+
+
+
+<!-- <div class="profile-page">
+    <div class="profile-left">
+
+
+        <img src="/static/images/avatar.jpeg" alt="Avatar" class="avatar">
+        <span>Joined: {{ profile.user.date_joined|date:"F Y" }}</span>
+
+
+        <div class="skills-section">
+            <h3>Skills i offer</h3>
+            <div class="skills-grid">
+                {% if offered_skills %}
+                {% for skill in offered_skills %}
+                <div class="skill-tag" tabindex="0">{{ skill.name }}</div>
+                {% endfor %}
+                {% else %}
+                <p class="empty-message">No skills added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="profile-right">
+        <span>{{ profile.user.username }}</span>
+        <span class="muted">{{ profile.user.email }}</span>
+        <span>{{ profile.user.first_name }} {{ profile.user.first_last }}</span>
+        <div class="bio">{{ profile.bio }}</div>
+    </div>
+</div> -->
+
+
+
+
+
+
+<!-- Header Section
+    <div class="profile-header">
+        <h1>{{ profile.user.username }}</h1>
+        <div class="profile-stats">
+            <span>Joined: {{ profile.user.date_joined|date:"F Y" }}</span>
+        </div>
+    </div>
+
+    <div class="profile-main">
+        <div class="profile-left">
+            <div class="profile-card">
+                <div class="card-header">
+                    <h2>About Me</h2>
+
+                </div>
+                <div class="card-content">
+                    <div class="info-row">
+                        <span class="label">Username</span>
+                        <span class="value">{{ profile.user.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Email</span>
+                        <span class="value">{{ profile.user.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">First Name</span>
+                        <span class="value">{{ profile.user.first_name|default:"Not set" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Last Name</span>
+                        <span class="value">{{ profile.user.last_name|default:"Not set" }}</span>
+                    </div>
+                    <div class="bio-section">
+                        <span class="label">Bio</span>
+                        <div class="bio-text">
+                            {% if profile.bio %}
+                            {{ profile.bio|linebreaks }}
+                            {% else %}
+                            <span class="empty-text">No bio added yet.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-right">
+            <div class="profile-card">
+                <div class="card-header">
+                    <h2>My Skills</h2>
+                </div>
+                <div class="card-content">
+                    <div class="skills-section">
+                        <h3>Skills I Offer</h3>
+                        <div class="skills-grid">
+                            {% if offered_skills %}
+                            {% for skill in offered_skills %}
+                            <div class="skill-tag">
+                                {{ skill.name }}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="empty-message">No skills added yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="skills-section">
+                        <h3>Skills I Want to Learn</h3>
+                        <div class="skills-grid">
+                            {% if needed_skills %}
+                            {% for skill in needed_skills %}
+                            <div class="skill-tag wanted">
+                                {{ skill.name }}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="empty-message">No skills selected.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="card-header">
+                    <h2>Recent Activity</h2>
+                </div>
+                <div class="card-content">
+                    <div class="activity-section">
+                        <h3>Recent Swaps</h3>
+                        {% if recent_swaps %}
+                        <div class="swaps-list">
+                            {% for swap in recent_swaps %}
+                            <div class="swap-item">
+                                <span class="swap-title">{{ swap.title|default:"Skill Exchange" }}</span>
+                                <span class="swap-date">{{ swap.created_at|date:"M d" }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="empty-message">No recent swaps.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="activity-section">
+                        <h3>Upcoming Swaps</h3>
+                        {% if upcoming_swaps %}
+                        <div class="swaps-list">
+                            {% for swap in upcoming_swaps %}
+                            <div class="swap-item upcoming">
+                                <span class="swap-title">{{ swap.title|default:"Scheduled Swap" }}</span>
+                                <span class="swap-date">{{ swap.scheduled_date|date:"M d" }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="empty-message">No upcoming swaps.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div> -->
+
+{% endblock %}

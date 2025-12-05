@@ -1,0 +1,266 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .form-container {
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    h2 {
+        margin-bottom: 12px;
+    }
+
+    .field {
+        margin-bottom: 18px;
+    }
+
+    .label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .input,
+    textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .small {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-top: 6px;
+    }
+
+    /* Skill selector styles */
+    .skill-selector { position: relative; border:1px solid #cbd5e1; padding:6px; border-radius:6px; min-height:44px; cursor:text; background:#fff; }
+.selector-tags { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.tag { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; background:#eef2ff; border-radius:999px; font-size:0.9rem; }
+.tag .remove { cursor:pointer; font-weight:700; padding-left:4px; }
+.selector-input { border:none; outline:none; min-width:120px; padding:4px; font-size:0.95rem; }
+
+
+    /* dropdown */
+    .selector-dropdown { position:absolute; left:0; right:0; top:100%; z-index:40; background:#fff; border:1px solid #cbd5e1; border-radius:6px; margin-top:4px; max-height:200px; overflow:auto; box-shadow:0 6px 18px rgba(15,23,42,0.08); display:none; }
+.dropdown-row { padding:8px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; cursor:pointer; }
+
+
+    .dropdown-row:last-child {
+        border-bottom: none;
+    }
+
+.dropdown-row:hover { background:#f8fafc; }
+
+
+    .no-results {
+        padding: 12px;
+        color: #6b7280;
+    }
+
+    /* checkbox look */
+    .row-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .row-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+
+
+    .selector-dropdown {
+        display: none;
+        /* مخفية افتراضياً */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 100;
+    }
+
+    .selector.active .selector-dropdown {
+        display: block;
+        /* تظهر لما يكون العنصر active */
+    }
+
+    .selector {
+        position: relative;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        padding: 8px;
+        border-radius: 6px;
+        background: #fff;
+    }
+
+    /* responsive */
+    @media (max-width:600px) {
+        .form-container {
+            padding: 12px;
+            margin: 8px;
+        }
+    }
+
+</style>
+
+<div class="form-container">
+    <form class="user-form" action="{% url 'accounts:profile_form' %}" method="post" enctype="multipart/form-data">
+        <h4>Compelete your profile</h4>
+
+        {% csrf_token %}
+
+        <textarea id="bio" name="bio" placeholder="Write something about yourself..." rows="4"></textarea>
+
+        <label for="profile_picture">Profile Picture</label>
+        <input type="file" id="profile_picture" name="avatar" accept="image/*" />
+
+
+        <!-- ---------- Offered skills selector ---------- -->
+        <div class="field">
+            <label class="label">Offered skills</label>
+            <div id="offered" class="skill-selector" data-field="offered_skills">
+                <div class="selector-tags" data-tags></div>
+                <input type="text" class="selector-input" placeholder="Search skills..." data-filter />
+                <div class="selector-dropdown" data-options style="display:none;">
+                    {% for s in all_skills %}
+                    <div class="dropdown-row" data-id="{{ s.id }}" data-name="{{ s.skill }}">
+                        <span>{{ s.skill }}</span>
+                        <span class="chk">{% if s.id in current_offered %}✓{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="hidden-inputs" style="display:none;"></div>
+            </div>
+            <div class="small">Type to filter and select multiple skills.</div>
+        </div>
+
+        <!-- ---------- Needed skills selector ---------- -->
+        <div class="field">
+            <label class="label">Needed skills</label>
+            <div id="needed" class="skill-selector" data-field="needed_skills">
+                <div class="selector-tags" data-tags></div>
+                <input type="text" class="selector-input" placeholder="Search skills..." data-filter />
+                <div class="selector-dropdown" data-options style="display:none;">
+                    {% for s in all_skills %}
+                    <div class="dropdown-row" data-id="{{ s.id }}" data-name="{{ s.skill }}">
+                        <span>{{ s.skill }}</span>
+                        <span class="chk">{% if s.id in current_needed %}✓{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="hidden-inputs" style="display:none;"></div>
+            </div>
+            <div class="small">Type to filter and select multiple skills.</div>
+        </div>
+
+
+        <button type="submit" class="btn submit-btn">Save Profile</button>
+    </form>
+</div>
+
+
+{{ current_needed|json_script:"current_needed" }}
+{{ all_skills_data|json_script:"all_skills_data" }}
+
+<script>
+    (function () {
+    function initSelector(rootId, currentIds) {
+        const root = document.getElementById(rootId);
+        const tagsWrap = root.querySelector('[data-tags]');
+        const filterInput = root.querySelector('[data-filter]');
+        const optionsWrap = root.querySelector('[data-options]');
+        const hiddenWrap = root.querySelector('.hidden-inputs');
+        const fieldName = root.dataset.field;
+        let selected = new Map();
+
+        // init preselected
+        if(currentIds && currentIds.length){
+            currentIds.forEach(id=>{
+                const opt = optionsWrap.querySelector(`.dropdown-row[data-id="${id}"]`);
+                let name = opt ? opt.dataset.name : id;
+                addSelected(id, name, {skipRender:true});
+            });
+        }
+
+        function renderSelected(){
+            tagsWrap.innerHTML = '';
+            selected.forEach((name, id)=>{
+                const span = document.createElement('span');
+                span.className='tag';
+                span.innerHTML=`<span>${name}</span><span class="remove" data-id="${id}">&times;</span>`;
+                tagsWrap.appendChild(span);
+                span.querySelector('.remove').addEventListener('click', e=>{
+                    e.stopPropagation();
+                    removeSelected(id);
+                });
+            });
+
+            hiddenWrap.innerHTML='';
+            selected.forEach((name,id)=>{
+                const inp=document.createElement('input');
+                inp.type='hidden'; inp.name=fieldName; inp.value=id;
+                hiddenWrap.appendChild(inp);
+            });
+
+            optionsWrap.querySelectorAll('.dropdown-row').forEach(opt=>{
+                const id = opt.dataset.id;
+                const chk = opt.querySelector('.chk');
+                chk.textContent = selected.has(id) ? '✓' : '';
+            });
+        }
+
+        function addSelected(id,name,opts){ id=String(id); if(selected.has(id)) return; selected.set(id,name||id); if(!opts||!opts.skipRender) renderSelected(); }
+        function removeSelected(id){ id=String(id); if(!selected.has(id)) return; selected.delete(id); renderSelected(); }
+
+        filterInput.addEventListener('focus', ()=>{ optionsWrap.style.display='block'; });
+        filterInput.addEventListener('input', ()=>{
+            const q = filterInput.value.trim().toLowerCase();
+            let visible=false;
+            optionsWrap.querySelectorAll('.dropdown-row').forEach(opt=>{
+                const name = (opt.dataset.name || '').toLowerCase();
+                const match=name.includes(q);
+                opt.style.display=match?'flex':'none';
+                if(match) visible=true;
+            });
+            optionsWrap.style.display = visible ? 'block' : 'none';
+        });
+
+        optionsWrap.addEventListener('click', e=>{
+            const row = e.target.closest('.dropdown-row');
+            if(!row) return;
+            const id=row.dataset.id, name=row.dataset.name;
+            selected.has(id)?removeSelected(id):addSelected(id,name);
+        });
+
+        document.addEventListener('click', e=>{
+            if(!root.contains(e.target)) optionsWrap.style.display='none';
+        });
+
+        renderSelected();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentOffered = JSON.parse('{{ current_offered_json|escapejs }}');
+        const currentNeeded  = JSON.parse('{{ current_needed_json|escapejs }}');
+        initSelector('offered', currentOffered);
+        initSelector('needed', currentNeeded);
+    });
+})();
+</script>
+
+{% endblock %}
