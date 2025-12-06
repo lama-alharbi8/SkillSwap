@@ -54,22 +54,42 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <p class="mb-0">{{ fairness_report.summary }}</p>
+                        <h6>Fairness Score: {{ fairness_report.fairness_score }}%</h6>
+                        {% if fairness_report.is_balanced %}
+                            <p class="mb-0">✓ This exchange is well-balanced!</p>
+                        {% else %}
+                            <p class="mb-0">⚠ Value difference: ${{ fairness_report.value_difference|floatformat:2 }}</p>
+                        {% endif %}
                     </div>
                     
-                    {% if fairness_report.details %}
-                        <h6>Details:</h6>
-                        <ul>
-                            {% for detail in fairness_report.details %}
-                                <li>{{ detail }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                    <h6>Value Details:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ exchange.initiator.username }}'s value:</span>
+                            <span>${{ fairness_report.initiator_value|floatformat:2 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ exchange.responder.username }}'s value:</span>
+                            <span>${{ fairness_report.responder_value|floatformat:2 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Hourly rate ratio:</span>
+                            <span>{{ fairness_report.hourly_rate_ratio|floatformat:2 }}:1</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Total exchange value:</span>
+                            <span>${{ fairness_report.total_value|floatformat:2 }}</span>
+                        </li>
+                    </ul>
                     
-                    {% if adjustment_suggestion %}
+                    {% if adjustment_suggestion and adjustment_suggestion.adjustment_needed %}
                         <div class="alert alert-warning mt-3">
-                            <h6><i class="bi bi-lightbulb me-2"></i>Suggestion:</h6>
-                            <p class="mb-0">{{ adjustment_suggestion }}</p>
+                            <h6><i class="bi bi-lightbulb me-2"></i>Fairness Suggestion:</h6>
+                            <p class="mb-1">For perfect fairness, consider adjusting hours:</p>
+                            <ul class="mb-0">
+                                <li><strong>{{ exchange.initiator.username }}:</strong> {{ adjustment_suggestion.suggested_initiator_hours }} hours</li>
+                                <li><strong>{{ exchange.responder.username }}:</strong> {{ adjustment_suggestion.suggested_responder_hours }} hours</li>
+                            </ul>
                         </div>
                     {% endif %}
                 </div>
@@ -84,7 +104,7 @@
                         <h6 class="mb-0">Exchange Information</h6>
                     </div>
                     <div class="card-body">
-                        <p><strong>Type:</strong> {{ exchange.exchange_type|title }}</p>
+                        <p><strong>Type:</strong> {{ exchange.get_exchange_type_display }}</p>
                         <p><strong>Created:</strong> {{ exchange.created_at|date:"M d, Y H:i" }}</p>
                         {% if exchange.accepted_at %}
                             <p><strong>Accepted:</strong> {{ exchange.accepted_at|date:"M d, Y H:i" }}</p>
@@ -108,8 +128,13 @@
                     <div class="card-body">
                         {% if exchange.terms %}
                             <p><strong>Terms:</strong> {{ exchange.terms }}</p>
+                        {% else %}
+                            <p class="text-muted">No terms specified</p>
                         {% endif %}
                         <p><strong>Other Party:</strong> {{ other_party.username }}</p>
+                        {% if exchange.initiator_hours_required and exchange.responder_hours_required %}
+                            <p><strong>Hours:</strong> {{ exchange.initiator_hours_required }}h from {{ exchange.initiator.username }} ↔ {{ exchange.responder_hours_required }}h from {{ exchange.responder.username }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -131,7 +156,8 @@
                             </form>
                         {% endif %}
                         
-                        {% if exchange.status in ['pending', 'under_review', 'negotiating'] %}
+                        <!-- FIXED LINE: Changed from ['pending', 'under_review', 'negotiating'] to can_cancel_statuses -->
+                        {% if exchange.status in can_cancel_statuses %}
                             {% if is_initiator or is_responder %}
                                 <form method="post" action="{% url 'skills:update_exchange_status' exchange.id %}" class="d-inline">
                                     {% csrf_token %}
@@ -139,6 +165,14 @@
                                     <button type="submit" class="btn btn-danger me-2">Cancel Exchange</button>
                                 </form>
                             {% endif %}
+                        {% endif %}
+                        
+                        {% if exchange.status == 'under_review' and is_responder %}
+                            <form method="post" action="{% url 'skills:update_exchange_status' exchange.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="accepted">
+                                <button type="submit" class="btn btn-success me-2">Accept Exchange</button>
+                            </form>
                         {% endif %}
                         
                         {% if exchange.status == 'accepted' and is_initiator %}
@@ -164,31 +198,75 @@
         </div>
         
         <!-- Rating Section -->
-        {% if exchange.status == 'completed' and not exchange.get_user_rating %}
+        {% if exchange.status == 'completed' %}
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">Rate Your Experience</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{% url 'skills:submit_rating' exchange.id %}">
-                        {% csrf_token %}
+                    <!-- Show existing ratings if any -->
+                    {% if exchange.initiator_rating %}
                         <div class="mb-3">
-                            <label for="rating" class="form-label">Rating (1-5)</label>
-                            <select name="rating" id="rating" class="form-select" required>
-                                <option value="">Select rating</option>
-                                <option value="5">5 - Excellent</option>
-                                <option value="4">4 - Very Good</option>
-                                <option value="3">3 - Good</option>
-                                <option value="2">2 - Fair</option>
-                                <option value="1">1 - Poor</option>
-                            </select>
+                            <h6>{{ exchange.initiator.username }}'s Rating:</h6>
+                            <p>
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= exchange.initiator_rating %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </p>
+                            {% if exchange.initiator_feedback %}
+                                <p><em>"{{ exchange.initiator_feedback }}"</em></p>
+                            {% endif %}
                         </div>
+                    {% endif %}
+                    
+                    {% if exchange.responder_rating %}
                         <div class="mb-3">
-                            <label for="feedback" class="form-label">Feedback (Optional)</label>
-                            <textarea name="feedback" id="feedback" class="form-control" rows="3"></textarea>
+                            <h6>{{ exchange.responder.username }}'s Rating:</h6>
+                            <p>
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= exchange.responder_rating %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </p>
+                            {% if exchange.responder_feedback %}
+                                <p><em>"{{ exchange.responder_feedback }}"</em></p>
+                            {% endif %}
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit Rating</button>
-                    </form>
+                    {% endif %}
+                    
+                    <!-- Show rating form if user hasn't rated yet -->
+                    {% if is_initiator and not exchange.initiator_rating or is_responder and not exchange.responder_rating %}
+                        <form method="post" action="{% url 'skills:submit_rating' exchange.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Your Rating (1-5)</label>
+                                <select name="rating" id="rating" class="form-select" required>
+                                    <option value="">Select rating</option>
+                                    <option value="5">5 - Excellent</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="1">1 - Poor</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="feedback" class="form-label">Feedback (Optional)</label>
+                                <textarea name="feedback" id="feedback" class="form-control" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Rating</button>
+                        </form>
+                    {% elif is_initiator and exchange.initiator_rating or is_responder and exchange.responder_rating %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-check-circle me-2"></i>You have already submitted your rating for this exchange.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

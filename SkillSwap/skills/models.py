@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 # Create your models here.
 
@@ -637,5 +639,64 @@ class BrokerProposal(models.Model):
                                           max(total_value_given, total_value_received) * 100)
                 self.save()
 
-
-
+class Notification(models.Model):
+    """User notifications for exchanges, messages, etc."""
+    NOTIFICATION_TYPES = [
+        ('exchange_proposed', 'Exchange Proposed'),
+        ('exchange_accepted', 'Exchange Accepted'),
+        ('exchange_rejected', 'Exchange Rejected'),
+        ('exchange_completed', 'Exchange Completed'),
+        ('exchange_cancelled', 'Exchange Cancelled'),
+        ('rating_received', 'Rating Received'),
+        ('message', 'Message'),
+        ('system', 'System Notification'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    
+    # Link to related object (exchange, message, etc.)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # Read status
+    is_read = models.BooleanField(default=False)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.title}"
+    
+    def mark_as_read(self):
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
+    
+    @property
+    def time_since(self):
+        """Get human-readable time since notification"""
+        now = timezone.now()
+        diff = now - self.created_at
+        
+        if diff.days > 0:
+            return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+        elif diff.seconds > 3600:
+            hours = diff.seconds // 3600
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif diff.seconds > 60:
+            minutes = diff.seconds // 60
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        else:
+            return "Just now"

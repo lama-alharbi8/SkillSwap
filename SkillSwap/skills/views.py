@@ -5,22 +5,25 @@ from django.contrib import messages
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from .notifications import send_exchange_notification, get_unread_notifications_count, get_recent_notifications, mark_all_as_read
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.utils import timezone
 from .models import (
     Skill, OfferedSkill, NeededSkill, 
-    SkillExchange, ExchangeChain, ChainLink, BrokerProposal
+    SkillExchange, ExchangeChain, ChainLink, BrokerProposal,
+    Notification  # ADDED THIS IMPORT
 )
 from .forms import (
     SkillForm, OfferSkillForm, NeedSkillForm, 
-    SkillExchangeForm, ExchangeProposalForm, ChainLinkForm
+    ProposeExchangeForm, ExchangeProposalForm, ChainLinkForm
 )
 from django.db import transaction
 import json
 from datetime import timedelta
 from decimal import Decimal
 from django.db.models import Sum
+
 
 # Create your views here.
 
@@ -57,6 +60,8 @@ def dashboard(request: HttpRequest):
             status='completed'
         ).order_by('-completed_at')[:10],
         'exchange_chains': ExchangeChain.objects.filter(chain_links__user=user).distinct()[:5],
+        'unread_notifications': get_unread_notifications_count(user),  # ADD THIS LINE
+        'recent_notifications': get_recent_notifications(user, 5),     # ADD THIS LINE
     }
 
     return render(request, 'skills/dashboard.html', context)
@@ -219,6 +224,9 @@ def initiate_exchange(request, offered_skill_id):
             terms=request.POST.get('terms', '')
         )
         
+        # SEND NOTIFICATION TO RESPONDER
+        send_exchange_notification(exchange, 'exchange_proposed')
+        
         messages.success(request, f'Exchange proposal sent to {target_skill.user.username}!')
         return redirect('skills:exchange_detail', exchange_id=exchange.id)
     
@@ -247,27 +255,46 @@ def propose_exchange(request, needed_skill_id):
         messages.error(request, "You don't offer a skill that matches this need!")
         return redirect('skills:dashboard')
     
+    # Get what the other user offers (this is CRITICAL - was missing!)
+    initiator_offered_skills = OfferedSkill.objects.filter(
+        user=needed_skill.user,
+        is_active=True
+    )
+    
     if request.method == 'POST':
         user_skill_id = request.POST.get('user_skill_id')
-        user_skill = get_object_or_404(OfferedSkill, id=user_skill_id, user=request.user)
+        initiator_skill_id = request.POST.get('initiator_skill_id')
         
-        # Create exchange
+        if not user_skill_id or not initiator_skill_id:
+            messages.error(request, "Please select skills from both parties!")
+            return redirect('skills:propose_exchange', needed_skill_id=needed_skill_id)
+        
+        user_skill = get_object_or_404(OfferedSkill, id=user_skill_id, user=request.user)
+        initiator_skill = get_object_or_404(OfferedSkill, id=initiator_skill_id, user=needed_skill.user)
+        
+        # Create exchange with BOTH skills (FIXED: skill_from_responder was None)
         exchange = SkillExchange.objects.create(
             initiator=request.user,
             responder=needed_skill.user,
             skill_from_initiator=user_skill,
-            skill_from_responder=None,  # Other person needs to offer something back
+            skill_from_responder=initiator_skill,  # FIXED THIS LINE
             exchange_type='value',
             status='pending',
-            terms=request.POST.get('terms', f"I can help with {needed_skill.skill.skill}")
+            terms=request.POST.get('terms', ''),
+            proposed_start_date=request.POST.get('proposed_start_date') or None,
+            proposed_end_date=request.POST.get('proposed_end_date') or None,
         )
+        
+        # SEND NOTIFICATION TO RESPONDER
+        send_exchange_notification(exchange, 'exchange_proposed')
         
         messages.success(request, f'Exchange proposal sent to {needed_skill.user.username}!')
         return redirect('skills:exchange_detail', exchange_id=exchange.id)
     
     return render(request, 'skills/propose_exchange.html', {
         'needed_skill': needed_skill,
-        'matching_skills': matching_skills
+        'matching_skills': matching_skills,
+        'initiator_offered_skills': initiator_offered_skills  # ADDED THIS
     })
 
 @login_required
@@ -284,6 +311,9 @@ def exchange_detail(request, exchange_id):
     fairness_report = exchange.get_detailed_fairness_report()
     adjustment_suggestion = exchange.suggest_adjustment()
     
+    # Status lists for template (FIXED)
+    can_cancel_statuses = ['pending', 'under_review', 'negotiating']
+    
     context = {
         'exchange': exchange,
         'fairness_report': fairness_report,
@@ -291,6 +321,7 @@ def exchange_detail(request, exchange_id):
         'is_initiator': exchange.initiator == request.user,
         'is_responder': exchange.responder == request.user,
         'other_party': exchange.get_other_party(request.user),
+        'can_cancel_statuses': can_cancel_statuses,  # Added for template
     }
     
     return render(request, 'skills/exchange_detail.html', context)
@@ -302,67 +333,38 @@ def update_exchange_status(request, exchange_id):
     exchange = get_object_or_404(SkillExchange, id=exchange_id)
     
     if not exchange.is_participant(request.user):
-        return JsonResponse({'error': 'Not authorized'}, status=403)
+        messages.error(request, "Not authorized")
+        return redirect('skills:exchange_detail', exchange_id=exchange.id)
     
     new_status = request.POST.get('status')
-    action = request.POST.get('action')
-    
-    # Validate status transition
-    valid_transitions = {
-        'pending': ['under_review', 'cancelled'],
-        'under_review': ['negotiating', 'cancelled'],
-        'negotiating': ['accepted', 'cancelled', 'disputed'],
-        'accepted': ['in_progress', 'cancelled', 'disputed'],
-        'in_progress': ['completed', 'disputed'],
-        'completed': [],  # Final state
-        'cancelled': [],  # Final state
-        'disputed': ['cancelled', 'completed'],  # Admin might resolve
-    }
-    
-    if new_status not in valid_transitions.get(exchange.status, []):
-        return JsonResponse({'error': 'Invalid status transition'}, status=400)
     
     # Update exchange
+    old_status = exchange.status
     exchange.status = new_status
     
-    # Set timestamps based on status
+    # Set timestamps
     now = timezone.now()
     if new_status == 'accepted' and not exchange.accepted_at:
         exchange.accepted_at = now
+        # SEND NOTIFICATION TO INITIATOR
+        send_exchange_notification(exchange, 'exchange_accepted')
+        
     elif new_status == 'in_progress' and not exchange.started_at:
         exchange.started_at = now
+        
     elif new_status == 'completed' and not exchange.completed_at:
         exchange.completed_at = now
+        # SEND NOTIFICATION TO BOTH PARTIES
+        send_exchange_notification(exchange, 'exchange_completed')
+        
+    elif new_status == 'cancelled':
+        exchange.completed_at = now
+        # SEND NOTIFICATION TO OTHER PARTY
+        send_exchange_notification(exchange, 'exchange_cancelled')
     
     exchange.save()
     
-    # If completing, request ratings
-    if new_status == 'completed':
-        messages.info(request, "Please rate your exchange partner!")
-    
-    messages.success(request, f'Exchange status updated to {new_status}.')
-    return redirect('skills:exchange_detail', exchange_id=exchange.id)
-
-@login_required
-@require_POST
-def update_exchange_terms(request, exchange_id):
-    """Update exchange terms during negotiation"""
-    exchange = get_object_or_404(SkillExchange, id=exchange_id)
-    
-    if not exchange.is_participant(request.user):
-        return JsonResponse({'error': 'Not authorized'}, status=403)
-    
-    if exchange.status not in ['pending', 'under_review', 'negotiating']:
-        return JsonResponse({'error': 'Cannot modify terms at this stage'}, status=400)
-    
-    new_terms = request.POST.get('terms')
-    if new_terms:
-        exchange.terms = new_terms
-        exchange.status = 'negotiating'
-        exchange.negotiated_at = timezone.now()
-        exchange.save()
-        messages.success(request, 'Terms updated successfully.')
-    
+    messages.success(request, f'Exchange status updated to {new_status.replace("_", " ").title()}.')
     return redirect('skills:exchange_detail', exchange_id=exchange.id)
 
 @login_required
@@ -372,10 +374,12 @@ def submit_rating(request, exchange_id):
     exchange = get_object_or_404(SkillExchange, id=exchange_id)
     
     if not exchange.is_participant(request.user):
-        return JsonResponse({'error': 'Not authorized'}, status=403)
+        messages.error(request, "Not authorized")
+        return redirect('skills:exchange_detail', exchange_id=exchange.id)
     
     if exchange.status != 'completed':
-        return JsonResponse({'error': 'Exchange not completed yet'}, status=400)
+        messages.error(request, "Exchange not completed yet")
+        return redirect('skills:exchange_detail', exchange_id=exchange.id)
     
     rating = request.POST.get('rating')
     feedback = request.POST.get('feedback', '')
@@ -383,9 +387,13 @@ def submit_rating(request, exchange_id):
     if request.user == exchange.initiator:
         exchange.initiator_rating = rating
         exchange.initiator_feedback = feedback
+        # SEND NOTIFICATION TO RESPONDER
+        send_exchange_notification(exchange, 'rating_received', to_user=exchange.responder)
     else:
         exchange.responder_rating = rating
         exchange.responder_feedback = feedback
+        # SEND NOTIFICATION TO INITIATOR
+        send_exchange_notification(exchange, 'rating_received', to_user=exchange.initiator)
     
     exchange.save()
     messages.success(request, 'Thank you for your rating!')
@@ -551,6 +559,42 @@ def exchange_chains(request):
     }
     
     return render(request, 'skills/exchange_chains.html', context)
+
+@login_required
+def notifications(request):
+    """View all notifications"""
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')
+    unread_count = get_unread_notifications_count(request.user)
+    
+    # Mark as read if viewing notifications page
+    if request.GET.get('mark_read'):
+        mark_all_as_read(request.user)
+        messages.success(request, 'All notifications marked as read!')
+        return redirect('skills:notifications')
+    
+    return render(request, 'skills/notifications.html', {
+        'notifications': notifications_list,
+        'unread_count': unread_count,
+    })
+
+@login_required
+def notification_mark_read(request, notification_id):
+    """Mark a notification as read"""
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.mark_as_read()
+    
+    # Redirect to appropriate page if linked to content
+    if notification.content_object:
+        if isinstance(notification.content_object, SkillExchange):
+            return redirect('skills:exchange_detail', exchange_id=notification.content_object.id)
+    
+    return redirect('skills:notifications')
+
+@login_required
+def get_notifications_count(request):
+    """API endpoint to get unread notifications count (for AJAX)"""
+    count = get_unread_notifications_count(request.user)
+    return JsonResponse({'count': count})
 
 # ==================== API ENDPOINTS ====================
 

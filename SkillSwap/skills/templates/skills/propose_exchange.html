@@ -17,31 +17,33 @@
                     <div class="card-body">
                         <h5>{{ needed_skill.skill.skill }}</h5>
                         <p><strong>Needed by:</strong> {{ needed_skill.user.username }}</p>
-                        <p><strong>Urgency:</strong> {{ needed_skill.urgency }}</p>
+                        <p><strong>Urgency:</strong> {{ needed_skill.get_urgency_display }}</p>
                         {% if needed_skill.max_hourly_rate %}
                             <p><strong>Max Rate:</strong> ${{ needed_skill.max_hourly_rate }}/hr</p>
                         {% endif %}
-                        <p><strong>Description:</strong> {{ needed_skill.description }}</p>
+                        <p><strong>Description:</strong> {{ needed_skill.description|default:"No description provided" }}</p>
                     </div>
                 </div>
                 
                 {% if matching_skills %}
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-4">
-                            <h5>Select Your Skill to Offer</h5>
-                            <p class="text-muted">Choose from your skills that match their need.</p>
+                    <!-- Your Skills to Offer -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Your Skills to Offer</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Choose which of your skills to offer for their need.</p>
                             
                             <div class="list-group">
                                 {% for skill in matching_skills %}
                                     <label class="list-group-item">
                                         <input type="radio" name="user_skill_id" value="{{ skill.id }}" 
-                                               class="form-check-input me-2" required>
+                                               class="form-check-input me-2" required
+                                               {% if forloop.first %}checked{% endif %}>
                                         <div class="d-flex w-100 justify-content-between">
                                             <div>
                                                 <h6 class="mb-1">{{ skill.skill.skill }}</h6>
-                                                <p class="mb-1">{{ skill.description|truncatewords:20 }}</p>
+                                                <p class="mb-1">{{ skill.description|truncatewords:20|default:"No description" }}</p>
                                                 <small class="text-muted">Your rate: ${{ skill.hourly_rate_equivalent }}/hr</small>
                                             </div>
                                             <div>
@@ -52,20 +54,99 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Note:</strong> You're offering to help with {{ needed_skill.user.username }}'s need. 
-                            They will need to propose something in return for a complete exchange.
+                    </div>
+                    
+                    <!-- What You Want in Return -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">What You Want in Return</h5>
                         </div>
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'skills:find_matches' %}" class="btn btn-secondary me-md-2">Cancel</a>
-                            <button type="submit" class="btn btn-primary">
-                                Send Proposal
-                            </button>
+                        <div class="card-body">
+                            <p class="text-muted">Select what you want from {{ needed_skill.user.username }} in exchange.</p>
+                            
+                            {% if initiator_offered_skills %}
+                                <div class="list-group mb-3">
+                                    {% for skill in initiator_offered_skills %}
+                                        <label class="list-group-item">
+                                            <input type="radio" name="initiator_skill_id" value="{{ skill.id }}" 
+                                                   class="form-check-input me-2" required
+                                                   {% if forloop.first %}checked{% endif %}>
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <div>
+                                                    <h6 class="mb-1">{{ skill.skill.skill }}</h6>
+                                                    <p class="mb-1">{{ skill.description|truncatewords:20|default:"No description" }}</p>
+                                                    <small class="text-muted">Their rate: ${{ skill.hourly_rate_equivalent }}/hr</small>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-info">${{ skill.hourly_rate_equivalent }}/hr</span>
+                                                    <span class="badge bg-secondary ms-1">Offered by {{ skill.user.username }}</span>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="alert alert-light">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Note:</strong> This exchange will be automatically calculated for fairness 
+                                    based on both skill rates. Higher rate skills will require fewer hours.
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <p>{{ needed_skill.user.username }} doesn't offer any skills to exchange.</p>
+                                    <a href="{% url 'skills:find_matches' %}" class="btn btn-sm btn-outline-secondary">Back to Matches</a>
+                                </div>
+                            {% endif %}
                         </div>
-                    </form>
+                    </div>
+                    
+                    <!-- Exchange Details -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">Exchange Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <!-- Hidden fields for skills (selected by radio buttons above) -->
+                                <input type="hidden" id="user_skill_id_input" name="user_skill_id" value="{{ matching_skills.first.id }}">
+                                {% if initiator_offered_skills %}
+                                <input type="hidden" id="initiator_skill_id_input" name="initiator_skill_id" value="{{ initiator_offered_skills.first.id }}">
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="terms" class="form-label">Terms & Conditions</label>
+                                    <textarea name="terms" id="terms" class="form-control" rows="4" 
+                                              placeholder="Describe the exchange details, schedule, expectations..."></textarea>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="proposed_start_date" class="form-label">Proposed Start Date</label>
+                                        <input type="date" name="proposed_start_date" id="proposed_start_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="proposed_end_date" class="form-label">Proposed End Date</label>
+                                        <input type="date" name="proposed_end_date" id="proposed_end_date" class="form-control">
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-lightbulb me-2"></i>
+                                    <strong>Tip:</strong> Be specific about deliverables, meeting times, and communication methods for a successful exchange.
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'skills:find_matches' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary" {% if not initiator_offered_skills %}disabled{% endif %}>
+                                        Send Proposal
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
                 {% else %}
                     <div class="alert alert-warning">
                         <p>You don't have any active skills that match this need.</p>
@@ -76,4 +157,51 @@
         </div>
     </div>
 </div>
+
+<script>
+// Update hidden inputs when radio buttons change
+document.addEventListener('DOMContentLoaded', function() {
+    // Update user skill selection
+    const userSkillRadios = document.querySelectorAll('input[name="user_skill_id"]');
+    const userSkillInput = document.getElementById('user_skill_id_input');
+    
+    userSkillRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                userSkillInput.value = this.value;
+            }
+        });
+    });
+    
+    // Update initiator skill selection
+    const initiatorSkillRadios = document.querySelectorAll('input[name="initiator_skill_id"]');
+    const initiatorSkillInput = document.getElementById('initiator_skill_id_input');
+    
+    if (initiatorSkillRadios && initiatorSkillInput) {
+        initiatorSkillRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    initiatorSkillInput.value = this.value;
+                }
+            });
+        });
+    }
+    
+    // Set today as min date for start date
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById('proposed_start_date');
+    const endDateInput = document.getElementById('proposed_end_date');
+    
+    if (startDateInput) {
+        startDateInput.min = today;
+    }
+    
+    // Validate end date is after start date
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            endDateInput.min = this.value;
+        });
+    }
+});
+</script>
 {% endblock %}

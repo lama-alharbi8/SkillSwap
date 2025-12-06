@@ -69,15 +69,16 @@ class NeedSkillForm(forms.ModelForm):
             self.fields['skill'].queryset = Skill.objects.all()
 
 
-class SkillExchangeForm(forms.ModelForm):
+class ProposeExchangeForm(forms.ModelForm):
+    """Form for proposing an exchange to someone who needs a skill"""
     class Meta:
         model = SkillExchange
-        fields = ['terms', 'proposed_start_date', 'proposed_end_date', 'exchange_type']
+        fields = ['skill_from_responder', 'terms', 'proposed_start_date', 'proposed_end_date']
         widgets = {
             'terms': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
-                'placeholder': 'Specify the details of the exchange...'
+                'placeholder': 'Describe the exchange details, schedule, expectations...'
             }),
             'proposed_start_date': forms.DateInput(attrs={
                 'class': 'form-control',
@@ -87,8 +88,21 @@ class SkillExchangeForm(forms.ModelForm):
                 'class': 'form-control',
                 'type': 'date'
             }),
-            'exchange_type': forms.Select(attrs={'class': 'form-control'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        self.responder = kwargs.pop('responder', None)  # Current user proposing
+        self.needed_skill = kwargs.pop('needed_skill', None)  # The skill being requested
+        super().__init__(*args, **kwargs)
+        
+        if self.responder and self.needed_skill:
+            # Filter skills: only show skills the responder offers
+            self.fields['skill_from_responder'].queryset = OfferedSkill.objects.filter(
+                user=self.responder,
+                is_active=True
+            )
+            self.fields['skill_from_responder'].label = "Select the skill you'll offer"
+            self.fields['skill_from_responder'].help_text = "Choose which of your skills to exchange"
 
 
 class ExchangeNegotiationForm(forms.ModelForm):
