@@ -1,6 +1,5 @@
 {% load static %}
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -38,15 +37,52 @@
             box-shadow: none !important;
         }
 
+        /* Fix navbar stacking context */
         .navbar {
             backdrop-filter: blur(5px);
             background: rgba(255, 255, 255, 0.1) !important;
+            position: relative;
+            z-index: 1030; /* Higher than default for proper stacking */
         }
 
+        /* Fix dropdown positioning - REMOVED position: static */
+        .navbar .dropdown-menu {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95) !important;
+            z-index: 1050 !important; /* Higher than navbar */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            min-width: 220px !important; /* Slightly wider for better readability */
+        }
+
+        /* User dropdown specific styling */
+        .navbar .dropdown-menu[aria-labelledby="userDropdown"] {
+            min-width: 200px !important;
+        }
+
+        /* Ensure main content has lower z-index */
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Fix for mobile dropdowns */
         @media (max-width: 992px) {
             .search-container {
                 background: white;
                 border-radius: 10px;
+            }
+            
+            .navbar .dropdown-menu {
+                position: static !important;
+                float: none !important;
+                width: 100% !important;
+                margin-top: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-top: 1px solid rgba(0,0,0,0.1) !important;
+                border-radius: 0 !important;
+                max-width: 100% !important;
             }
         }
 
@@ -56,11 +92,6 @@
 
         .nav-link:hover {
             transform: translateY(-2px);
-        }
-
-        .dropdown-menu {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
         }
     </style>
     {% endblock %}
@@ -252,7 +283,7 @@
             </div>
             <hr>
             <div class="text-center text-muted">
-                <p class="mb-0">&copy; 2024 SkillSwap. All rights reserved.</p>
+                <p class="mb-0">&copy; 2025 SkillSwap. All rights reserved.</p>
             </div>
         </div>
     </footer>
