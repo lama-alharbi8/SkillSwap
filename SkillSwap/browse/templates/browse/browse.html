@@ -4,43 +4,257 @@
 {% block content %}
 
 
-<h1>Browse Profiles</h1>
+<!-- search bar -->
 
-  <!-- filters -->
-  <form method="get" class="filters">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search users..." />
-    <select name="category">
-      <option value="">All categories</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}" {% if c.id|stringformat:"s" == selected_category %}selected{% endif %}>{{ c.category }}</option>
-      {% endfor %}
-    </select>
+<!-- search + filters -->
+<form action="{% url 'browse:browse_view' %}" method="get" class="search-filter-form">
+  <input name="q" value="{{ query|default:'' }}">
 
-    <select name="skill">
-      <option value="">All skills</option>
-      {% for s in skills %}
-        <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_skill %}selected{% endif %}>{{ s.skill }}</option>
-      {% endfor %}
-    </select>
-
-    <button type="submit">Filter</button>
-  </form>
-
-
-{% include 'browse/profile_list.html' %}
+  <div class="filters-row">
+ 
+      <select name="offered">
+        <option value="">Offers:</option>
+        {% for s in skills %}
+          <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_offered %}selected{% endif %}>{{ s.skill }}</option>
+        {% endfor %}
+      </select>
 
 
 
-<!-- pagination -->
-  <div class="pagination">
-    {% if profiles.has_previous %}
-      <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_skill %}skill={{ selected_skill }}&{% endif %}page={{ profiles.previous_page_number }}">Previous</a>
-    {% endif %}
-    <span>Page {{ profiles.number }} of {{ profiles.paginator.num_pages }}</span>
-    {% if profiles.has_next %}
-      <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_skill %}skill={{ selected_skill }}&{% endif %}page={{ profiles.next_page_number }}">Next</a>
-    {% endif %}
+      <select name="needed">
+        <option value="">Needs:</option>
+        {% for s in skills %}
+          <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_needed %}selected{% endif %}>{{ s.skill }}</option>
+        {% endfor %}
+      </select>
   </div>
+</form>
 
-  
+
+
+
+<div class="page-wrap">
+  <h2>Browse Profiles</h2>
+
+  <div class="cards-grid">
+
+    {% for profile in profiles %}
+    <div class="profile-card">
+
+
+      <div class="upper-section">
+
+        {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Avatar">
+        {% else %}
+        <img src="{% static '/images/avatar.jpeg' %}">
+        {% endif %}
+
+        <div class="user-name">
+          <div class="input-placeholder">{{ profile.user.username }}</div>
+
+          <div class="text-muted joined">
+            {% if profile.user.date_joined %}
+            {{ profile.user.date_joined|date:"d M Y" }}
+            {% endif %}
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="lower-section">
+
+        <div class="skills-box">
+          <div class="skills-title">my skills</div>
+
+          <div class="skills-inner">
+            {% for s in profile.offered_skills.all %}
+            <span class="skill-tag">{{ s.skill }}</span>
+            {% empty %}
+            <span class="skill-tag">None</span>
+            {% endfor %}
+          </div>
+
+        </div>
+
+
+        <div class="skills-box">
+          <div class="skills-title">want swapping with</div>
+
+          <div class="skills-inner">
+            {% for s in profile.needed_skills.all %}
+            <span class="skill-tag">{{ s.skill }}</span>
+            {% empty %}
+            <span class="skill-tag">None</span>
+            {% endfor %}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+
+<style>
+
+  .page-wrap h2 {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 15px;
+
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .profile-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 20px;
+    background: #fff;
+    gap: 5px;
+
+  }
+
+  .upper-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+  }
+
+  img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+  }
+
+  .user-name {
+    justify-content: center;
+  }
+
+  .joined {
+    font-size: 10px;
+  }
+
+  .lower-section {
+    width: 100%;
+  }
+
+  .skills-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skills-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding-top: 10px;
+  }
+
+  .skills-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .skill-tag {
+    padding: 2px 6px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 0.8em;
+    background-color: #f0f0f0;
+  }
+
+
+
+
+/* Container form */
+.search-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Search input */
+.search-filter-form input[name="q"] {
+  width: 180px;          /* صغر عرض البحث */
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+/* Filters row */
+.filters-row {
+  display: flex;
+  gap: 10px;             /* المسافة بين الفلاتر */
+  align-items: center;
+}
+
+/* Label styling */
+.filters-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+/* Select dropdowns */
+.filters-row select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+/* زر البحث */
+.search-filter-form button.btn-search {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #2b6cb0;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* زر مسح الفلاتر */
+.search-filter-form a.btn-clear {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+/* Responsive: لو الشاشة صغيرة */
+@media (max-width: 600px) {
+  .search-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-row {
+    flex-wrap: wrap;
+  }
+}
+</style>
+
+
 {% endblock %}

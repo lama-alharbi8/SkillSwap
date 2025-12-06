@@ -9,62 +9,62 @@ from skills.models import Skill, Category
 
 def browse_view(request : HttpRequest):
     
-    qs = UserProfile.objects.all().select_related('user')
-
-    #maybe move filter and search to different view (?)
+    query = request.GET.get("q", "").strip()
+    offered_id = request.GET.get("offered", "").strip()
+    needed_id = request.GET.get("needed", "").strip()
     
-    # count each user total skills //optional
-    qs = qs.annotate(skills_count=Count('user_skills', distinct=True))
+    qs = UserProfile.objects.select_related("user").prefetch_related("offered_skills__skill", "needed_skills__skill").all()
+        
+    if len(query) >= 3:
+        qs = qs.filter(user__username__icontains=query)
 
-    # # search
-    # q = request.GET.get('q', '').strip()
-    # if q:
-    #     qs = qs.filter(
-    #         Q(user__username__icontains=q) |
-    #         Q(user__first_name__icontains=q) |
-    #         Q(user__last_name__icontains=q)
-    #     )
+    # فلتر: users who OFFER a given skill
+    if offered_id:
+        try:
+            offered_id_int = int(offered_id)
+            qs = qs.filter(user__offered_skills__skill__id=offered_id_int)
+        except ValueError:
+            pass
 
-    # filter by skill id
-    skill_id = request.GET.get('skill')
-    if skill_id:
-        qs = qs.filter(user_skills__skill_id=skill_id).distinct()
+    # فلتر: users who NEED a given skill
+    if needed_id:
+        try:
+            needed_id_int = int(needed_id)
+            qs = qs.filter(user__needed_skills__skill__id=needed_id_int)
+        except ValueError:
+            pass
 
-    # filter by category id
-    category_id = request.GET.get('category')
-    if category_id:
-        qs = qs.filter(user_skills__skill__categories__id=category_id).distinct()
+    qs = qs.distinct()  # مهم لنتجنب التكرار عند الـ joins
 
-    qs = qs.order_by('user__username')
+    # جلب كل السكِلز عشان نعرضهم في الفيلتر dropdown
+    skills = Skill.objects.order_by("skill").all()
 
-    # lists for filter controls in template
-    categories = Category.objects.filter(parent__isnull=True).order_by('category')  # root categories
-    skills = Skill.objects.order_by('skill').all()
-
-    # pagination
-    page_num = request.GET.get('page', 1)
-    paginator = Paginator(qs, 12)  # 12 cards per page
-    profiles_page = paginator.get_page(page_num)
-
-    return render(request, "browse/browse.html", {
-        "profiles": profiles_page,
-        "paginator": paginator,
-        "categories": categories,
+    context = {
+        "profiles": qs,
         "skills": skills,
-        "q": q,
-        "selected_skill": skill_id or "",
-        "selected_category": category_id or "",
-    })
+        "query": query,
+        "selected_offered": offered_id,
+        "selected_needed": needed_id,
+    }
+        
+        
+    return render(request, 'browse/browse.html', context)
     
+
+# def search_view (request : HttpRequest):
     
-def search_profiles(request):
-    q = request.GET.get("q", "")
+#     query = request.GET.get("q", "").strip()
+#     results = []
+    
+#     if len(query) >= 3:
+#         results = UserProfile.objects.filter(user__username__icontains=query)
+#     return render(request, "browse/browse.html", {"results": results, "query": query})
+    
+#     # if "search" in request.GET and len(request.GET["search"]) >= 3:
+#     #     results = UserProfile.objects.filter(user__username__icontains = request.GET["search"])
+#     # else:
+#     #     results = []
+        
+#     # return render(request, "browse/browse.html", {"results": results})
+    
 
-    results = UserProfile.objects.filter(
-        user__username__icontains=q
-    )
-
-    return render(request, "browse/search_results.html", {
-        "q": q,
-        "results": results
-    })

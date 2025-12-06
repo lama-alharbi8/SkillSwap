@@ -5,208 +5,235 @@
 
 {% block content %}
 
-<div class="profile-page">
-    <div class="profile-left">
+<style>
+    :root {
+        --bg: #ffffff;
+        --line: #111111;
+    }
 
-        <img src="/static/images/avatar.jpeg" alt="Avatar" class="avatar">
+    html,
+    body {
+        height: 100%;
+        /* margin: 0; */
+        /* background: var(--bg); */
+        font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--line)
+    }
 
-        <span class="text-muted">Since: {{ profile.user.date_joined|date:"F Y" }}</span>
+    .page-wrap {
+        display: flex;
+        justify-content: center;
+        /* padding: 22px 36px */
+    }
 
-        <div class="skills-section">
-            <h4>My Skills</h4>
-            <div class="skills-grid">
-                {% if offered_skills %}
-                {% for skill in offered_skills %}
-                <div class="skill-tag">
-                    {{ skill.name }}
+    /* layout grid similar to screenshot */
+    .layout {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    /* LEFT column */
+    .left {
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: flex-start;
+    }
+
+    .avatar-wrap {
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* If profile.avatar exists, show it covering circle */
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 999px;
+    }
+
+    /* fallback black circle exactly like screenshot */
+    .avatar-fallback {
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: #000;
+    }
+
+    /* small joined text under avatar exactly as in image */
+    .joined {
+        font-size: 12px;
+        color: #000;
+        margin-top: 6px;
+    }
+
+    /* skills box with rounded rect and two tags inside */
+    .skills-box {
+        margin-top: 6px;
+        border: 1px solid #000;
+        border-radius: 14px;
+        padding: 14px;
+        width: 220px;
+        box-sizing: border-box;
+    }
+
+    .skills-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    /* inner area with rounded tags */
+    .skills-inner {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .skill-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #000;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    /* RIGHT column */
+    .right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: flex-start;
+    }
+
+    .edit-title {
+        font-size: 13px;
+        color: #000;
+        margin-left: 0;
+    }
+
+    .field {
+        width: 420px;
+    }
+
+    /* placeholder boxes */
+    .input-placeholder {
+        height: 42px;
+        border: 1px solid #000;
+        border-radius: 16px;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        font-size: 14px;
+        color: #000;
+    }
+
+    .textarea-placeholder {
+        height: 120px;
+        border: 1px solid #000;
+        border-radius: 12px;
+        padding: 12px 16px;
+        box-sizing: border-box;
+        font-size: 14px;
+        color: #000;
+    }
+
+    @media (max-width:820px) {
+        .layout {
+            flex-direction: column;
+            gap: 18px
+        }
+
+        .right .field {
+            width: 100%
+        }
+
+        .skills-box {
+            width: 100%
+        }
+    }
+</style>
+
+<body>
+    <div class="page-wrap">
+        <div class="layout">
+            <!-- LEFT COLUMN -->
+            <div class="left">
+                <div class="avatar-wrap">
+                    
+                    <img src="{{ profile.avatar.url }}" class="avatar-img"/>
+                       
                 </div>
-                {% endfor %}
-                {% else %}
-                <p class="empty-message">No skills added yet.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 
-
-    <div class="profile-right">
-
-        <p>{{ profile.user.username }}</p>
-        <p>{{ profile.user.email }}</p>
-        <p>{{ profile.user.first_name }}</p>
-        <p>{{ profile.user.first_last }}</p>
-        <p>{{ profile.bio }}</p>
-
-
-    </div>
-</div>
-
-
-
-<!-- <div class="profile-page">
-    <div class="profile-left">
-
-
-        <img src="/static/images/avatar.jpeg" alt="Avatar" class="avatar">
-        <span>Joined: {{ profile.user.date_joined|date:"F Y" }}</span>
-
-
-        <div class="skills-section">
-            <h3>Skills i offer</h3>
-            <div class="skills-grid">
-                {% if offered_skills %}
-                {% for skill in offered_skills %}
-                <div class="skill-tag" tabindex="0">{{ skill.name }}</div>
-                {% endfor %}
-                {% else %}
-                <p class="empty-message">No skills added yet.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-
-    <div class="profile-right">
-        <span>{{ profile.user.username }}</span>
-        <span class="muted">{{ profile.user.email }}</span>
-        <span>{{ profile.user.first_name }} {{ profile.user.first_last }}</span>
-        <div class="bio">{{ profile.bio }}</div>
-    </div>
-</div> -->
-
-
-
-
-
-
-<!-- Header Section
-    <div class="profile-header">
-        <h1>{{ profile.user.username }}</h1>
-        <div class="profile-stats">
-            <span>Joined: {{ profile.user.date_joined|date:"F Y" }}</span>
-        </div>
-    </div>
-
-    <div class="profile-main">
-        <div class="profile-left">
-            <div class="profile-card">
-                <div class="card-header">
-                    <h2>About Me</h2>
-
+                <div class="joined">
+                    {# show formatted join date; if missing, leave blank (no extra text) #}
+                    {% if profile.user.date_joined %}
+                    joined {{ profile.user.date_joined|date:"M Y"|default:"" }}
+                    {% endif %}
                 </div>
-                <div class="card-content">
-                    <div class="info-row">
-                        <span class="label">Username</span>
-                        <span class="value">{{ profile.user.username }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Email</span>
-                        <span class="value">{{ profile.user.email }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">First Name</span>
-                        <span class="value">{{ profile.user.first_name|default:"Not set" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Last Name</span>
-                        <span class="value">{{ profile.user.last_name|default:"Not set" }}</span>
-                    </div>
-                    <div class="bio-section">
-                        <span class="label">Bio</span>
-                        <div class="bio-text">
-                            {% if profile.bio %}
-                            {{ profile.bio|linebreaks }}
-                            {% else %}
-                            <span class="empty-text">No bio added yet.</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="profile-right">
-            <div class="profile-card">
-                <div class="card-header">
-                    <h2>My Skills</h2>
-                </div>
-                <div class="card-content">
-                    <div class="skills-section">
-                        <h3>Skills I Offer</h3>
-                        <div class="skills-grid">
-                            {% if offered_skills %}
-                            {% for skill in offered_skills %}
-                            <div class="skill-tag">
-                                {{ skill.name }}
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            <p class="empty-message">No skills added yet.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="skills-section">
-                        <h3>Skills I Want to Learn</h3>
-                        <div class="skills-grid">
-                            {% if needed_skills %}
-                            {% for skill in needed_skills %}
-                            <div class="skill-tag wanted">
-                                {{ skill.name }}
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            <p class="empty-message">No skills selected.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-
-                </div>
-            </div>
-
-            <div class="profile-card">
-                <div class="card-header">
-                    <h2>Recent Activity</h2>
-                </div>
-                <div class="card-content">
-                    <div class="activity-section">
-                        <h3>Recent Swaps</h3>
-                        {% if recent_swaps %}
-                        <div class="swaps-list">
-                            {% for swap in recent_swaps %}
-                            <div class="swap-item">
-                                <span class="swap-title">{{ swap.title|default:"Skill Exchange" }}</span>
-                                <span class="swap-date">{{ swap.created_at|date:"M d" }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="empty-message">No recent swaps.</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="activity-section">
-                        <h3>Upcoming Swaps</h3>
-                        {% if upcoming_swaps %}
-                        <div class="swaps-list">
-                            {% for swap in upcoming_swaps %}
-                            <div class="swap-item upcoming">
-                                <span class="swap-title">{{ swap.title|default:"Scheduled Swap" }}</span>
-                                <span class="swap-date">{{ swap.scheduled_date|date:"M d" }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="empty-message">No upcoming swaps.</p>
+                <div class="skills-box">
+                    <div class="skills-title">my skills</div>
+                    <div class="skills-inner">
+                        {# Display offered skills (from view) - if none, show nothing inside box #}
+                        {% if offered_skills %}
+                        {% for s in offered_skills %}
+                        {# s is OfferedSkill instance; s.skill uses Skill.__str__ #}
+                        <span class="skill-tag">{{ s.skill }}</span>
+                        {% endfor %}
                         {% endif %}
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!-- RIGHT COLUMN -->
+            <div class="right">
+                <div class="edit-title">edit</div>
+
+                <div class="field">
+                    <div class="input-placeholder">
+                        {% if profile.user.username %}{{ profile.user.username }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="input-placeholder">
+                        {% if profile.user.email %}{{ profile.user.email }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="input-placeholder">
+                        {% if profile.user.first_name %}{{ profile.user.first_name }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="input-placeholder">
+                        {% if profile.user.last_name %}{{ profile.user.last_name }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="textarea-placeholder">
+                        {% if profile.bio %}{{ profile.bio }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-</div> -->
 
-{% endblock %}
+    {% endblock %}

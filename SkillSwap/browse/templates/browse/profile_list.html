@@ -1,86 +1,100 @@
+<!-- browse_profiles.html -->
 
-<div class="profiles-layout">
+<div class="page-wrap">
+    <h1>Catchy Phrase</h1>
 
-  <!-- left mini-profile (example of current user) -->
-  <aside class="mini-profile-card">
-    <div class="mini-avatar">
-      {% if request.user.is_authenticated and request.user.profile.avatar %}
-        <img src="{{ request.user.profile.avatar.url }}" alt="{{ request.user.username }}">
-      {% else %}
-        <!-- <div class="avatar-placeholder">👤</div> -->
-      {% endif %}
-    </div>
+    <div class="cards-grid">
+        {% for profile in profiles %}
+        <div class="profile-card">
+            <!-- LEFT COLUMN -->
+            <div class="left">
+                <div class="avatar-wrap">
+                    <img src="{{ profile.avatar.url }}" class="avatar-img"/>
+                </div>
 
-    <div class="mini-body">
-      <h3 class="mini-username">{{ request.user.username }}</h3>
+                <div class="joined">
+                    {% if profile.user.date_joined %}
+                        joined {{ profile.user.date_joined|date:"M Y" }}
+                    {% endif %}
+                </div>
 
-      <div class="mini-section">
-        <div class="label">my skills:</div>
-        <div class="badges">
-          {% for us in request.user.profile.user_skills.all|slice:":4" %}
-            <span class="badge available">{{ us.skill.skill }}</span>
-          {% empty %}
-            <span class="muted">No skills yet</span>
-          {% endfor %}
-        </div>
-      </div>
+                <div class="skills-box">
+                    <div class="skills-title">my skills</div>
+                    <div class="skills-inner">
+                        {% for s in profile.offered_skills.all %}
+                            <span class="skill-tag">{{ s.skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
 
-      <div class="mini-section">
-        <div class="label">want swapping with:</div>
-        <div class="badges">
-          {% for us in request.user.profile.user_skills.all|dictsortreversed:"proficiency"|slice:":4" %}
-            {% if us.wants_skill %}
-              <span class="badge wants">{{ us.skill.skill }}</span>
-            {% endif %}
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- grid of profile cards -->
-  <section class="profiles-grid">
-    {% for profile in profiles %}
-      <article class="profile-card">
-        <a class="card-link" href="{% url 'profiles:detail' profile.id %}">
-          <div class="card-thumb">
-            {% if profile.avatar %}
-              <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
-            {% else %}
-              <div class="thumb-placeholder"></div>
-            {% endif %}
-          </div>
-
-          <div class="card-body">
-            <h3 class="card-username">{{ profile.user.username }}</h3>
-
-            <div class="card-row">
-              <div class="label-small">my skills</div>
-              <div class="badges">
-                {% for us in profile.user_skills.all|slice:":3" %}
-                  <span class="badge available">{{ us.skill.skill }}</span>
-                {% empty %}
-                  <span class="muted">—</span>
-                {% endfor %}
-              </div>
+                <div class="skills-box">
+                    <div class="skills-title">want swapping with</div>
+                    <div class="skills-inner">
+                        {% for s in profile.needed_skills.all %}
+                            <span class="skill-tag">{{ s.skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
-            <div class="card-row">
-              <div class="label-small">wants</div>
-              <div class="badges">
-                {% for us in profile.user_skills.all %}
-                  {% if us.wants_skill %}
-                    <span class="badge wants">{{ us.skill.skill }}</span>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </a>
-      </article>
-    {% empty %}
-      <p>No profiles found.</p>
-    {% endfor %}
-  </section>
+            <!-- RIGHT COLUMN -->
+            <div class="right">
+                <div class="field">
+                    <div class="input-placeholder">{{ profile.user.username }}</div>
+                </div>
 
+                <div class="field">
+                    <div class="textarea-placeholder">{{ profile.bio }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+
+<style>
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.profile-card {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 10px;
+    background: #fff;
+}
+
+.left {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.right {
+    flex: 2;
+}
+
+.avatar-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+}
+
+.skills-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.skill-tag {
+    padding: 2px 6px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 0.8em;
+}
+
+</style>

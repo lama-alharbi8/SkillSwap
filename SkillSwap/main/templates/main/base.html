@@ -62,10 +62,84 @@
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.95);
         }
+
+        .search-input {
+            border: none !important;
+            background: transparent !important;
+            border-radius: 50px 0 0 50px !important;
+        }
+
+        .search-input:focus {
+            box-shadow: none !important;
+        }
+
+        .navbar {
+            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        @media (max-width: 992px) {
+            .search-container {
+                background: white;
+                border-radius: 10px;
+            }
+        }
     </style>
     {% endblock %}
 
 </head>
+
+
+<!-- <body class="d-flex flex-column min-vh-100"> -->
+
+<!-- <body> -->
+
+<!-- <div class="header-wrapper">
+        <div class="logo">
+            <a href="{% url 'main:home_view' %}">SkillSwap</a>
+        </div>
+
+        <div class="nav-links">
+            <div class="navbar">
+                <ul>
+                    <li><a href="{% url 'main:home_view' %}">Home</a></li>
+                    <li><a href="{% url 'browse:browse_view' %}">Browse</a></li>
+                    <li><a href="#">My Swaps</a></li>
+                    <li><a href="#">Messages</a></li>
+                </ul>
+            </div>
+
+
+            <form action="#" method="get">
+                <input type="text" name="q" placeholder="Search users...">
+                <button type="submit">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+            </form>
+
+
+            <div class="nav-person" id="nav-person">
+                <button id="person-btn" class="person-btn" aria-haspopup="true" aria-expanded="false"
+                    aria-controls="person-menu" type="button">
+                    <span class="material-symbols-outlined">person</span>
+                </button>
+
+                <div id="person-menu" class="person-menu" role="menu" aria-hidden="true">
+                    {% if request.user.is_authenticated %}
+                    <a class="menu-item" href="{% url 'accounts:profile_form' %}">My profile</a>
+                    <form method="post" action="{% url 'accounts:log_out_view' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="menu-item logout-btn">Log out</button>
+                    </form>
+                    {% else %}
+                    <a class="menu-item" href="{% url 'accounts:signin_view' %}">Sign in</a>
+                    <a class="menu-item" href="{% url 'accounts:signup_view' %}">Sign up</a>
+                    {% endif %}
+
+                </div> 
+
+            </div> -->
+
 
 
 <body class="d-flex flex-column min-vh-100">
@@ -73,17 +147,17 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-transparent py-3">
             <div class="container-fluid px-5">
-                
+
                 <a class="navbar-brand fw-medium" href="/">
                     <h2 class="mb-0">SkillSwap</h2>
                 </a>
 
-                
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                
+
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <!-- Navigation Links -->
                     <ul class="navbar-nav me-auto">
@@ -92,64 +166,74 @@
                                 <i class="bi bi-house"></i> Home
                             </a>
                         </li>
-                        
+
                         {% if user.is_authenticated %}
                         <!-- Skills App Navigation -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="skillsDropdown" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="skillsDropdown" role="button"
+                                data-bs-toggle="dropdown">
                                 <i class="bi bi-arrow-left-right"></i> My Skills
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="skillsDropdown">
                                 <li><a class="dropdown-item" href="{% url 'skills:dashboard' %}">
-                                    <i class="bi bi-speedometer2"></i> Dashboard
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li><a class="dropdown-item" href="{% url 'skills:offer_skill' %}">
-                                    <i class="bi bi-plus-circle"></i> Offer a Skill
-                                </a></li>
+                                        <i class="bi bi-plus-circle"></i> Offer a Skill
+                                    </a></li>
                                 <li><a class="dropdown-item" href="{% url 'skills:need_skill' %}">
-                                    <i class="bi bi-search"></i> Request a Skill
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                        <i class="bi bi-search"></i> Request a Skill
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li><a class="dropdown-item" href="{% url 'skills:manage_offered_skills' %}">
-                                    <i class="bi bi-list-check"></i> My Offered Skills
-                                </a></li>
+                                        <i class="bi bi-list-check"></i> My Offered Skills
+                                    </a></li>
                                 <li><a class="dropdown-item" href="{% url 'skills:manage_needed_skills' %}">
-                                    <i class="bi bi-list-task"></i> My Needed Skills
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                        <i class="bi bi-list-task"></i> My Needed Skills
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li><a class="dropdown-item" href="{% url 'skills:find_matches' %}">
-                                    <i class="bi bi-people"></i> Find Matches
-                                </a></li>
+                                        <i class="bi bi-people"></i> Find Matches
+                                    </a></li>
                             </ul>
                         </li>
 
                         <!-- Exchanges Navigation -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="exchangesDropdown" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="exchangesDropdown" role="button"
+                                data-bs-toggle="dropdown">
                                 <i class="bi bi-arrow-repeat"></i> Exchanges
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="exchangesDropdown">
                                 <li><a class="dropdown-item" href="{% url 'skills:dashboard' %}#active_exchanges">
-                                    <i class="bi bi-hourglass-split"></i> Active Exchanges
-                                </a></li>
+                                        <i class="bi bi-hourglass-split"></i> Active Exchanges
+                                    </a></li>
                                 <li><a class="dropdown-item" href="{% url 'skills:dashboard' %}#completed_exchanges">
-                                    <i class="bi bi-check-circle"></i> Completed Exchanges
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                        <i class="bi bi-check-circle"></i> Completed Exchanges
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li><a class="dropdown-item" href="{% url 'skills:exchange_chains' %}">
-                                    <i class="bi bi-link-45deg"></i> Exchange Chains
-                                </a></li>
+                                        <i class="bi bi-link-45deg"></i> Exchange Chains
+                                    </a></li>
                                 <li><a class="dropdown-item" href="{% url 'skills:create_chain' %}">
-                                    <i class="bi bi-plus-lg"></i> Create New Chain
-                                </a></li>
+                                        <i class="bi bi-plus-lg"></i> Create New Chain
+                                    </a></li>
                             </ul>
                         </li>
                         {% endif %}
 
                         <!-- Browse Navigation (Teammate's work) -->
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{% url 'browse:browse_view' %}">
                                 <i class="bi bi-compass"></i> Browse
                             </a>
                         </li>
@@ -160,28 +244,48 @@
                         {% if user.is_authenticated %}
                         <!-- User Dropdown -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="30" height="30">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                                role="button" data-bs-toggle="dropdown">
+
+
+                                {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" class="rounded-circle me-2" width="30"
+                                    height="30">
+
                                 {% else %}
-                                <img src="{% static 'images/avatar.jpg' %}" class="rounded-circle me-2" width="30" height="30">
+                                <img src="{% static 'images/avatar.jpeg' %}" class="rounded-circle me-2" width="30"
+                                    height="30">
                                 {% endif %}
+
+
+
+
+
+     
+
+
+
                                 {{ user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{% url 'accounts:user_profile' %}">
-                                    <i class="bi bi-person-circle"></i> My Profile
-                                </a></li>
+                                        <i class="bi bi-person-circle"></i> My Profile
+                                    </a></li>
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile_form' %}">
-                                    <i class="bi bi-gear"></i> Settings
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'skills:statistics' %}">
-                                    <i class="bi bi-bar-chart"></i> Statistics
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                        <i class="bi bi-gear"></i> Settings
+                                    </a></li>
                                 <li>
-                                    <form method="post" action="{% url 'accounts:log_out_view' %}" style="display: inline;">
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="{% url 'skills:statistics' %}">
+                                        <i class="bi bi-bar-chart"></i> Statistics
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form method="post" action="{% url 'accounts:log_out_view' %}"
+                                        style="display: inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item text-danger">
                                             <i class="bi bi-box-arrow-right"></i> Logout
@@ -191,6 +295,7 @@
                             </ul>
                         </li>
                         {% else %}
+
                         <!-- Login/Signup Links -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:signin_view' %}">
@@ -223,9 +328,12 @@
             {% endif %}
 
             {% block content %}
+
             {% endblock %}
         </div>
     </main>
+
+
 
     <!-- Footer -->
     <footer class="bg-light py-4 mt-auto">
@@ -238,10 +346,14 @@
                 <div class="col-md-4">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{% url 'skills:dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
-                        <li><a href="{% url 'skills:offer_skill' %}" class="text-decoration-none text-muted">Offer a Skill</a></li>
-                        <li><a href="{% url 'skills:find_matches' %}" class="text-decoration-none text-muted">Find Matches</a></li>
-                        <li><a href="{% url 'skills:dashboard' %}" class="text-decoration-none text-muted">Browse Skills</a></li>
+                        <li><a href="{% url 'skills:dashboard' %}" class="text-decoration-none text-muted">Dashboard</a>
+                        </li>
+                        <li><a href="{% url 'skills:offer_skill' %}" class="text-decoration-none text-muted">Offer a
+                                Skill</a></li>
+                        <li><a href="{% url 'skills:find_matches' %}" class="text-decoration-none text-muted">Find
+                                Matches</a></li>
+                        <li><a href="{% url 'skills:dashboard' %}" class="text-decoration-none text-muted">Browse
+                                Skills</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
@@ -258,8 +370,9 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     {% block scripts %}
+
     {% endblock %}
 </body>
 

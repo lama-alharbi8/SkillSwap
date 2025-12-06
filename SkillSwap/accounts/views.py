@@ -8,10 +8,6 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-from skills.models import Skill, OfferedSkill, NeededSkill
 import json
 from django.utils.safestring import mark_safe
 
@@ -154,10 +150,18 @@ def profile_form(request : HttpRequest):
     
 @login_required
 def user_profile(request : HttpRequest):    
-    profile = get_object_or_404(UserProfile, user=request.user)
     
-    return render(request, 'accounts/user_profile.html', {'profile': profile})
+    profile = get_object_or_404(UserProfile.objects.select_related('user'), user=request.user)
 
+    offered = profile.user.offered_skills.select_related('skill').filter(is_active=True)
+    needed  = profile.user.needed_skills.select_related('skill').filter(is_active=True)
+
+    return render(request, 'accounts/user_profile.html', {
+        'profile': profile,
+        'offered_skills': offered,
+        'needed_skills': needed,
+    })
+    
 
 def skills_search(request : HttpRequest):
     """
