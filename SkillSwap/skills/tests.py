@@ -464,7 +464,7 @@ def run_all_tests():
     
     for test in tests:
         try:
-            test_case.setUp()  # Fresh data for each test
+            test_case.setUp()
             test()
             print(f"✓ {test.__name__} passed\n")
         except Exception as e:
@@ -472,6 +472,6 @@ def run_all_tests():
     
     print("All tests completed!")
 
-# This allows running the test file directly
+
 if __name__ == "__main__":
     run_all_tests()

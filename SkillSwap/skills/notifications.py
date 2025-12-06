@@ -4,7 +4,7 @@ from django.utils import timezone
 from .models import Notification, SkillExchange
 
 def create_notification(user, notification_type, title, message, content_object=None):
-    """Create a notification for a user"""
+
     notification = Notification.objects.create(
         user=user,
         notification_type=notification_type,
@@ -15,29 +15,28 @@ def create_notification(user, notification_type, title, message, content_object=
     return notification
 
 def send_exchange_notification(exchange, notification_type, to_user=None):
-    """Send notification about an exchange"""
+
     
-    # Determine who to notify
+
     if to_user:
         recipients = [to_user]
     else:
-        # Notify the other party in the exchange
+
         if exchange.initiator and exchange.responder:
-            # Get the user who is NOT the one who triggered the notification
-            # For exchange_proposed: notify responder
+
             if notification_type == 'exchange_proposed':
                 recipients = [exchange.responder]
-            # For exchange_accepted: notify initiator
+
             elif notification_type == 'exchange_accepted':
                 recipients = [exchange.initiator]
-            # For exchange_completed: notify both parties
+
             elif notification_type == 'exchange_completed':
                 recipients = [exchange.initiator, exchange.responder]
-            # For other notifications: notify the other party
+
             else:
                 recipients = [exchange.get_other_party(exchange.initiator)]
         else:
-            return []  # Return empty list if exchange is missing participants
+            return [] 
     
     notification_data = {
         'exchange_proposed': {

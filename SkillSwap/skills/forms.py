@@ -27,14 +27,14 @@ class OfferSkillForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         if user:
-            # Get skills that the user is NOT already offering
+           
             already_offering = user.offered_skills.values_list('skill_id', flat=True)
             available_skills = Skill.objects.exclude(id__in=already_offering)
             
             self.fields['skill'].queryset = available_skills
             self.fields['skill'].empty_label = "Select a skill to offer"
             
-            # Optional: Show skills the user already offers in a disabled way
+
             if already_offering.exists():
                 self.fields['skill'].help_text = f"You're already offering {already_offering.count()} skill(s)"
         else:
@@ -55,7 +55,7 @@ class NeedSkillForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         if user:
-            # Get skills that the user is NOT already needing
+           
             already_needing = user.needed_skills.values_list('skill_id', flat=True)
             available_skills = Skill.objects.exclude(id__in=already_needing)
             
@@ -65,7 +65,7 @@ class NeedSkillForm(forms.ModelForm):
             if already_needing.exists():
                 self.fields['skill'].help_text = f"You're already requesting {already_needing.count()} skill(s)"
         else:
-            # For logged out users (though they shouldn't see this form)
+           
             self.fields['skill'].queryset = Skill.objects.all()
 
 
@@ -91,12 +91,12 @@ class ProposeExchangeForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        self.responder = kwargs.pop('responder', None)  # Current user proposing
-        self.needed_skill = kwargs.pop('needed_skill', None)  # The skill being requested
+        self.responder = kwargs.pop('responder', None)  
+        self.needed_skill = kwargs.pop('needed_skill', None)  
         super().__init__(*args, **kwargs)
         
         if self.responder and self.needed_skill:
-            # Filter skills: only show skills the responder offers
+            
             self.fields['skill_from_responder'].queryset = OfferedSkill.objects.filter(
                 user=self.responder,
                 is_active=True
@@ -169,7 +169,7 @@ class ChainLinkForm(forms.ModelForm):
     def __init__(self, user=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if user:
-            # Limit gives_skill to user's offered skills
+           
             self.fields['gives_skill'].queryset = OfferedSkill.objects.filter(
                 user=user, is_active=True
             )

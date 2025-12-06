@@ -9,7 +9,7 @@
     </div>
     
     <div class="card-body">
-        <!-- Exchange Overview -->
+       
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card h-100">
@@ -46,7 +46,7 @@
             </div>
         </div>
         
-        <!-- Fairness Analysis -->
+   
         {% if fairness_report %}
             <div class="card mb-4">
                 <div class="card-header">
@@ -96,7 +96,7 @@
             </div>
         {% endif %}
         
-        <!-- Exchange Info -->
+
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card">
@@ -140,7 +140,7 @@
             </div>
         </div>
         
-        <!-- Actions -->
+        
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Actions</h5>
@@ -156,8 +156,7 @@
                             </form>
                         {% endif %}
                         
-                        <!-- FIXED LINE: Changed from ['pending', 'under_review', 'negotiating'] to can_cancel_statuses -->
-                        {% if exchange.status in can_cancel_statuses %}
+                     
                             {% if is_initiator or is_responder %}
                                 <form method="post" action="{% url 'skills:update_exchange_status' exchange.id %}" class="d-inline">
                                     {% csrf_token %}
@@ -197,14 +196,14 @@
             </div>
         </div>
         
-        <!-- Rating Section -->
+      
         {% if exchange.status == 'completed' %}
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">Rate Your Experience</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Show existing ratings if any -->
+                    
                     {% if exchange.initiator_rating %}
                         <div class="mb-3">
                             <h6>{{ exchange.initiator.username }}'s Rating:</h6>
@@ -241,7 +240,7 @@
                         </div>
                     {% endif %}
                     
-                    <!-- Show rating form if user hasn't rated yet -->
+                    
                     {% if is_initiator and not exchange.initiator_rating or is_responder and not exchange.responder_rating %}
                         <form method="post" action="{% url 'skills:submit_rating' exchange.id %}">
                             {% csrf_token %}

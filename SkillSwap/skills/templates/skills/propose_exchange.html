@@ -9,7 +9,7 @@
                 <h4 class="mb-0">Propose Exchange</h4>
             </div>
             <div class="card-body">
-                <!-- Needed Skill Info -->
+             
                 <div class="card mb-4">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">Skill Needed</h5>
@@ -26,7 +26,7 @@
                 </div>
                 
                 {% if matching_skills %}
-                    <!-- Your Skills to Offer -->
+              
                     <div class="card mb-4">
                         <div class="card-header bg-success text-white">
                             <h5 class="mb-0">Your Skills to Offer</h5>
@@ -56,7 +56,7 @@
                         </div>
                     </div>
                     
-                    <!-- What You Want in Return -->
+                  
                     <div class="card mb-4">
                         <div class="card-header bg-info text-white">
                             <h5 class="mb-0">What You Want in Return</h5>
@@ -100,7 +100,7 @@
                         </div>
                     </div>
                     
-                    <!-- Exchange Details -->
+                  
                     <div class="card mb-4">
                         <div class="card-header bg-secondary text-white">
                             <h5 class="mb-0">Exchange Details</h5>
@@ -109,7 +109,7 @@
                             <form method="post">
                                 {% csrf_token %}
                                 
-                                <!-- Hidden fields for skills (selected by radio buttons above) -->
+                                
                                 <input type="hidden" id="user_skill_id_input" name="user_skill_id" value="{{ matching_skills.first.id }}">
                                 {% if initiator_offered_skills %}
                                 <input type="hidden" id="initiator_skill_id_input" name="initiator_skill_id" value="{{ initiator_offered_skills.first.id }}">
@@ -159,9 +159,9 @@
 </div>
 
 <script>
-// Update hidden inputs when radio buttons change
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Update user skill selection
+ 
     const userSkillRadios = document.querySelectorAll('input[name="user_skill_id"]');
     const userSkillInput = document.getElementById('user_skill_id_input');
     
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Update initiator skill selection
+
     const initiatorSkillRadios = document.querySelectorAll('input[name="initiator_skill_id"]');
     const initiatorSkillInput = document.getElementById('initiator_skill_id_input');
     
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Set today as min date for start date
+   
     const today = new Date().toISOString().split('T')[0];
     const startDateInput = document.getElementById('proposed_start_date');
     const endDateInput = document.getElementById('proposed_end_date');
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startDateInput.min = today;
     }
     
-    // Validate end date is after start date
+  
     if (startDateInput && endDateInput) {
         startDateInput.addEventListener('change', function() {
             endDateInput.min = this.value;

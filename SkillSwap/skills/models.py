@@ -47,7 +47,7 @@ class OfferedSkill(models.Model):
         max_digits=7,
         decimal_places=2,  
         default=25.00,
-        validators=[MinValueValidator(1)],  # Added validator
+        validators=[MinValueValidator(1)],  
         help_text="Estimated market rate per hour (for fair exchange calculation)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -131,7 +131,6 @@ class SkillExchange(models.Model):
     responder_hours_required = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
     total_value = models.DecimalField(max_digits=9, decimal_places=2, default=0, help_text="Total value of exchange in $ equivalent")
     
-    # New fields for better fairness tracking
     is_balanced = models.BooleanField(default=False, help_text="Whether the exchange is financially balanced")
     imbalance_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0, help_text="Monetary value difference if not perfectly balanced")
     
@@ -163,12 +162,12 @@ class SkillExchange(models.Model):
         return f"Exchange #{self.id}: {self.initiator.username} ↔ {self.responder.username}"
 
     def clean(self):
-        """Validate the exchange before saving"""
-        # Prevent self-exchange
+
+
         if self.initiator == self.responder:
             raise ValidationError("Cannot exchange with yourself")
         
-        # Check skill ownership (only if skills are set)
+
         if hasattr(self, 'skill_from_initiator') and self.skill_from_initiator:
             if self.skill_from_initiator.user != self.initiator:
                 raise ValidationError("Initiator must own the offered skill")
@@ -181,19 +180,19 @@ class SkillExchange(models.Model):
         return f'{self.skill_from_initiator.skill.skill} ↔ {self.skill_from_responder.skill.skill}'
     
     def calculate_fair_exchange(self):
-        """Calculate fair hours based on hourly rates"""
+  
         try:
-            # Get the hourly rates as floats
+          
             rate_a = float(self.skill_from_initiator.hourly_rate_equivalent)
             rate_b = float(self.skill_from_responder.hourly_rate_equivalent)
             
-            # Store the rates
+          
             self.initiator_hourly_rate = rate_a
             self.responder_hourly_rate = rate_b
             
-            # Check for invalid rates
+          
             if rate_a <= 0 or rate_b <= 0:
-                # Default to 1:1 exchange if rates aren't set properly
+             
                 self.initiator_hours_required = 1.0
                 self.responder_hours_required = 1.0
                 self.calculated_ratio = 1.0
@@ -202,40 +201,36 @@ class SkillExchange(models.Model):
                 self.imbalance_amount = 0
                 return None
             
-            # Calculate the ratio of rates
+           
             ratio = rate_a / rate_b
             self.calculated_ratio = ratio
             
-            # Determine hours for equal value exchange
-            # We standardize so at least one person works 1 hour
+      
             if ratio >= 1:
-                # A's work is more valuable
-                # 1 hour of A = ratio hours of B
-                self.initiator_hours_required = 1.0
-                self.responder_hours_required = round(ratio, 2)  # Round to 1 decimal
-            else:
-                # B's work is more valuable
-                # 1 hour of B = 1/ratio hours of A
-                self.responder_hours_required = 1.0
-                self.initiator_hours_required = round(1 / ratio, 2)  # Round to 1 decimal
             
-            # Calculate total value (should be equal from both perspectives)
+                self.initiator_hours_required = 1.0
+                self.responder_hours_required = round(ratio, 2)  
+            else:
+             
+                self.responder_hours_required = 1.0
+                self.initiator_hours_required = round(1 / ratio, 2)  
+
             initiator_value = rate_a * float(self.initiator_hours_required)
             responder_value = rate_b * float(self.responder_hours_required)
             
-            # Use the average as total value
+   
             self.total_value = (initiator_value + responder_value) / 2
             
-            # Check if exchange is balanced (within 1% tolerance)
+     
             value_difference = abs(initiator_value - responder_value)
             self.imbalance_amount = value_difference
             
-            # Consider balanced if difference is less than 1% of total value
+        
             if self.total_value > 0:
-                tolerance = self.total_value * 0.01  # 1% tolerance
+                tolerance = self.total_value * 0.01  
                 self.is_balanced = value_difference <= tolerance
             else:
-                self.is_balanced = value_difference <= 0.01  # $0.01 tolerance
+                self.is_balanced = value_difference <= 0.01 
             
             return {
                 'ratio': ratio,
@@ -248,7 +243,7 @@ class SkillExchange(models.Model):
                 'imbalance': float(self.imbalance_amount)
             }
         except (AttributeError, ValueError, TypeError) as e:
-            # If something goes wrong, set defaults
+          
             self.initiator_hours_required = 1.0
             self.responder_hours_required = 1.0
             self.calculated_ratio = 1.0
@@ -258,20 +253,18 @@ class SkillExchange(models.Model):
             return None
     
     def save(self, *args, **kwargs):
-        """Override save to calculate fair exchange and validate"""
-        # Check if we should skip calculation (for testing unfair exchanges)
+        
+      
         skip_calculation = kwargs.pop('skip_calculation', False)
         
-        # Always calculate fair exchange if we have both skills AND not skipping
+      
         if (not skip_calculation and self.skill_from_initiator_id and 
             self.skill_from_responder_id):
             self.calculate_fair_exchange()
         
-        # Run validation
         try:
             self.full_clean()
         except ValidationError as e:
-            # Log or handle validation error
             raise e
         
         super().save(*args, **kwargs)
@@ -280,9 +273,9 @@ class SkillExchange(models.Model):
         return user in [self.initiator, self.responder]
     
     def get_fairness_score(self):
-        """Calculate fairness score 0-100 based on hourly rate equivalence"""
+      
         try:
-            # Check if we have valid data
+        
             initiator_rate = float(self.initiator_hourly_rate)
             responder_rate = float(self.responder_hourly_rate)
             initiator_hours = float(self.initiator_hours_required)
@@ -291,11 +284,11 @@ class SkillExchange(models.Model):
             if initiator_rate <= 0 or responder_rate <= 0 or initiator_hours <= 0 or responder_hours <= 0:
                 return 0
             
-            # Calculate value each person gives
+ 
             initiator_value_given = initiator_rate * initiator_hours
             responder_value_given = responder_rate * responder_hours
             
-            # Calculate fairness ratio
+     
             max_value = max(initiator_value_given, responder_value_given)
             if max_value > 0:
                 fairness = min(initiator_value_given, responder_value_given) / max_value
@@ -303,11 +296,11 @@ class SkillExchange(models.Model):
         except (ValueError, TypeError):
             pass
         
-        # Return 0 if we can't calculate
+        
         return 0
     
     def get_value_imbalance(self):
-        """Calculate monetary imbalance in the exchange"""
+      
         try:
             initiator_value = float(self.initiator_hourly_rate) * float(self.initiator_hours_required)
             responder_value = float(self.responder_hourly_rate) * float(self.responder_hours_required)
@@ -316,7 +309,7 @@ class SkillExchange(models.Model):
             return 0
     
     def suggest_adjustment(self):
-        """Suggest hours adjustment for perfect fairness"""
+    
         try:
             initiator_rate = float(self.initiator_hourly_rate)
             responder_rate = float(self.responder_hourly_rate)
@@ -324,14 +317,14 @@ class SkillExchange(models.Model):
             if initiator_rate <= 0 or responder_rate <= 0:
                 return None
             
-            # Perfect ratio for equal value
+       
             perfect_ratio = initiator_rate / responder_rate
             
             initiator_hours = float(self.initiator_hours_required)
             responder_hours = float(self.responder_hours_required)
             current_ratio = initiator_hours / responder_hours if responder_hours > 0 else 0
             
-            # Check if adjustment is needed (more than 5% difference)
+          
             if perfect_ratio > 0 and abs(current_ratio - perfect_ratio) / perfect_ratio > 0.05:
                 if perfect_ratio >= 1:
                     suggested_initiator_hours = 1.0
@@ -353,7 +346,7 @@ class SkillExchange(models.Model):
         return {'adjustment_needed': False, 'fairness_score': self.get_fairness_score()}
     
     def get_detailed_fairness_report(self):
-        """Generate comprehensive fairness analysis"""
+
         try:
             initiator_value = float(self.initiator_hourly_rate) * float(self.initiator_hours_required)
             responder_value = float(self.responder_hourly_rate) * float(self.responder_hours_required)
@@ -388,7 +381,7 @@ class SkillExchange(models.Model):
             }
     
     def get_other_party(self, user):
-        """Return the other user in the exchange"""
+  
         if user == self.initiator:
             return self.responder
         elif user == self.responder:
@@ -397,7 +390,7 @@ class SkillExchange(models.Model):
 
     
 class ExchangeChain(models.Model):
-    """Tracks multi-person exchange chains (A→B→C→A)"""
+
     STATUS_CHOICES = [
         ('forming', 'Forming - Looking for participants'),
         ('proposed', 'Proposed - Chain identified'),
@@ -412,7 +405,7 @@ class ExchangeChain(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='forming')
     description = models.TextField(blank=True)
     
-    # Chain metrics
+    
     total_participants = models.IntegerField(default=0)
     total_hours = models.DecimalField(max_digits=7, decimal_places=2, default=0)
 
@@ -423,7 +416,7 @@ class ExchangeChain(models.Model):
         related_name='created_chains'
     )
     
-    # Timestamps
+
     created_at = models.DateTimeField(auto_now_add=True)
     proposed_at = models.DateTimeField(null=True, blank=True)
     accepted_at = models.DateTimeField(null=True, blank=True)
@@ -438,24 +431,24 @@ class ExchangeChain(models.Model):
         return f"Chain #{self.id}: {self.name or 'Unnamed Chain'}"
     
     def get_chain_summary(self):
-        """Get human-readable chain summary"""
+       
         links = self.chain_links.all().order_by('position')
         if links.exists():
             users = [link.user.username for link in links]
-            return " → ".join(users) + f" → {users[0]}"  # Close the loop
+            return " → ".join(users) + f" → {users[0]}" 
         return "Empty Chain"
     
     def calculate_fairness(self):
-        """Calculate if chain is fair for all participants"""
+       
         links = self.chain_links.all()
         if links.count() < 2:
             return 100
         
-        # Calculate total hours given and received
+    
         hours_given = sum([float(link.hours_given) for link in links])
         hours_received = sum([float(link.hours_received) for link in links])
         
-        # Calculate value-based fairness
+
         value_given = 0
         value_received = 0
         
@@ -469,14 +462,14 @@ class ExchangeChain(models.Model):
             fairness_score = min(value_given, value_received) / max(value_given, value_received) * 100
             return round(fairness_score, 1)
         
-        # Fallback to hours-based fairness
+     
         if hours_received > 0:
             return round(min(hours_given, hours_received) / max(hours_given, hours_received) * 100, 1)
         
         return 0
     
     def update_chain_metrics(self):
-        """Update chain metrics based on links"""
+       
         links = self.chain_links.all()
         self.total_participants = links.count()
         
@@ -485,22 +478,21 @@ class ExchangeChain(models.Model):
         self.save(update_fields=['total_participants', 'total_hours'])
     
 class ChainLink(models.Model):
-    """A single participant in an exchange chain"""
+
     chain = models.ForeignKey(ExchangeChain, on_delete=models.CASCADE, related_name='chain_links')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chain_participations')
-    
-    # What this user gives and receives
+
     gives_skill = models.ForeignKey(OfferedSkill, on_delete=models.CASCADE, related_name='given_in_chains')
     receives_skill = models.ForeignKey(OfferedSkill, on_delete=models.CASCADE, related_name='received_in_chains')
     
-    # Hours involved
+
     hours_given = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
     hours_received = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, validators=[MinValueValidator(0.1)])
     
-    # Position in chain (0, 1, 2, ...)
+
     position = models.IntegerField(default=0)
     
-    # Participant status
+
     status = models.CharField(
         max_length=20,
         choices=[
@@ -512,7 +504,7 @@ class ChainLink(models.Model):
         default='pending'
     )
     
-    # Timestamps
+
     joined_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(null=True, blank=True)
     
@@ -527,19 +519,19 @@ class ChainLink(models.Model):
         return f"{self.user.username} in Chain #{self.chain.id} (Position {self.position})"
     
     def get_value_given(self):
-        """Calculate monetary value of what this user gives"""
+    
         if self.gives_skill:
             return float(self.gives_skill.hourly_rate_equivalent) * float(self.hours_given)
         return 0
     
     def get_value_received(self):
-        """Calculate monetary value of what this user receives"""
+  
         if self.receives_skill:
             return float(self.receives_skill.hourly_rate_equivalent) * float(self.hours_received)
         return 0
     
     def get_fairness_for_user(self):
-        """Calculate fairness from this user's perspective"""
+    
         value_given = self.get_value_given()
         value_received = self.get_value_received()
         
@@ -549,29 +541,29 @@ class ChainLink(models.Model):
         return 0
     
     def get_next_in_chain(self):
-        """Get the next user in the chain"""
+    
         try:
             return ChainLink.objects.get(chain=self.chain, position=self.position + 1)
         except ChainLink.DoesNotExist:
-            # Loop back to first if at end
+  
             return ChainLink.objects.filter(chain=self.chain).order_by('position').first()
     
     def get_previous_in_chain(self):
-        """Get the previous user in the chain"""
+
         try:
             return ChainLink.objects.get(chain=self.chain, position=self.position - 1)
         except ChainLink.DoesNotExist:
-            # Loop back to last if at beginning
+
             return ChainLink.objects.filter(chain=self.chain).order_by('-position').first()
     
     def save(self, *args, **kwargs):
-        """Override save to update chain metrics"""
+
         super().save(*args, **kwargs)
         self.chain.update_chain_metrics()
 
 
 class BrokerProposal(models.Model):
-    """System-generated exchange proposals when no direct match exists"""
+
     PROPOSAL_TYPES = [
         ('chain_3', '3-Person Chain (A→B→C→A)'),
         ('chain_4', '4-Person Chain (A→B→C→D→A)'),
@@ -583,10 +575,10 @@ class BrokerProposal(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     
-    # Participants (JSON field for flexibility)
+
     participants_data = models.JSONField(default=dict, help_text="Structured data about proposed exchanges")
     
-    # Status
+
     status = models.CharField(
         max_length=20,
         choices=[
@@ -599,11 +591,11 @@ class BrokerProposal(models.Model):
         default='generated'
     )
     
-    # Metrics
+
     fairness_score = models.IntegerField(default=0, help_text="0-100 score of how fair the exchange is")
     efficiency_score = models.IntegerField(default=0, help_text="0-100 score of chain efficiency")
     
-    # Timestamps
+
     created_at = models.DateTimeField(auto_now_add=True)
     proposed_to_users_at = models.DateTimeField(null=True, blank=True)
     
@@ -614,21 +606,19 @@ class BrokerProposal(models.Model):
         return f"Broker Proposal: {self.title}"
     
     def propose_to_users(self):
-        """Send this proposal to all involved users"""
-        # This would create notifications for each user
+
         self.status = 'proposed'
         self.proposed_to_users_at = timezone.now()
         self.save()
     
     def calculate_proposal_fairness(self):
-        """Calculate fairness score for this proposal"""
-        # Extract participant data and calculate fairness
+
         if 'participants' in self.participants_data:
             total_value_given = 0
             total_value_received = 0
             
             for participant in self.participants_data['participants']:
-                # This is a simplified calculation - you'd need actual skill data
+
                 if 'gives_value' in participant:
                     total_value_given += participant['gives_value']
                 if 'receives_value' in participant:
@@ -640,7 +630,7 @@ class BrokerProposal(models.Model):
                 self.save()
 
 class Notification(models.Model):
-    """User notifications for exchanges, messages, etc."""
+
     NOTIFICATION_TYPES = [
         ('exchange_proposed', 'Exchange Proposed'),
         ('exchange_accepted', 'Exchange Accepted'),
@@ -657,15 +647,15 @@ class Notification(models.Model):
     title = models.CharField(max_length=200)
     message = models.TextField()
     
-    # Link to related object (exchange, message, etc.)
+
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
     
-    # Read status
+
     is_read = models.BooleanField(default=False)
     
-    # Timestamps
+
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
     

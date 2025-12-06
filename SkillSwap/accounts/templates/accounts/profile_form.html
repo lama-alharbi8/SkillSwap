@@ -41,7 +41,7 @@
         margin-top: 6px;
     }
 
-    /* Skill selector styles */
+   
     .skill-selector {
         position: relative;
         border: 1px solid #cbd5e1;
@@ -178,22 +178,34 @@
 
 <div class="form-container">
     <form class="user-form" action="{% url 'accounts:profile_form' %}" method="post" enctype="multipart/form-data">
-        <h4>Compelete your profile</h4>
+        <h4>Complete your profile</h4>
 
         {% csrf_token %}
 
         <textarea id="bio" name="bio" placeholder="Write something about yourself..."
             rows="4">{% if profile and profile.bio %}{{ profile.bio }}{% endif %}</textarea>
 
-        <label for="profile_picture">Profile Picture</label>
-
-        {% if profile and profile.avatar %}
-        <div class="current-avatar">
-            <img src="{{ profile.avatar.url }}" alt="Current avatar" />
+        <div class="field">
+            <label class="label">Profile Picture</label>
+            
+            <div style="display: flex; align-items: center; gap: 12px;">
+                {% if profile and profile.avatar %}
+                <img src="{{ profile.avatar.url }}" 
+                     alt="Current avatar" 
+                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />
+                {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" 
+                     alt="Default avatar" 
+                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />
+                {% endif %}
+                
+                <input type="file" 
+                       id="profile_picture" 
+                       name="avatar" 
+                       accept="image/*"
+                       style="flex-grow: 1; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;" />
+            </div>
         </div>
-        {% endif %}
-        <input type="file" id="profile_picture" name="avatar" accept="image/*" />
-
 
         <!-- ---------- Offered skills selector ---------- -->
         <div class="field">
