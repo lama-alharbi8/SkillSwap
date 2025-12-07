@@ -186,6 +186,14 @@
                             </a>
                         </li>
 
+                        {% if request.user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'skills:cat_skill_add' %}">Add Skill
+                            </a>
+                        </li>
+                        {% endif %}
+
+
                         {% if user.is_authenticated %}
                      
                         <li class="nav-item dropdown">
@@ -369,7 +377,7 @@
                                     {% elif user.userprofile.avatar %}
                                     <img src="{{ user.userprofile.avatar.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
                                     {% else %}
-                                    <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
+                                    <img src="{% static 'images/avatar.jpeg' %}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
                                     {% endif %}
                                     {{ user.username }}
                                 {% endif %}

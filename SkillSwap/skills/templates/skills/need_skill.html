@@ -2,122 +2,92 @@
 {% load static %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            
-            
-            <div class="mb-5">
-                <h2 class="fw-bold mb-3">Request a Skill</h2>
-                <p class="text-muted">Describe what skill you need and we'll help you find someone who can help.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Request a Skill</h4>
             </div>
-
-            {% if existing_needs %}
-            <div class="mb-4 p-3 bg-light rounded">
-                <h6 class="mb-2 fw-semibold">Skills you're already requesting:</h6>
-                <div class="d-flex flex-wrap gap-2">
-                    {% for need in existing_needs %}
-                    <span class="badge bg-secondary">
-                        {{ need.skill.skill }}
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-          
-            {% if form.skill.field.queryset.count == 0 %}
-            <div class="alert alert-light border text-center py-5">
-                <i class="bi bi-check-circle display-4 text-success mb-3"></i>
-                <h4 class="mb-3">You're requesting all available skills</h4>
-                <p class="text-muted mb-4">You've already requested all the skills in our system.</p>
-                <div class="d-flex gap-2 justify-content-center">
-                    <a href="{% url 'skills:manage_needed_skills' %}" class="btn btn-outline-primary">
-                        Manage Requests
-                    </a>
-                    <a href="{% url 'skills:dashboard' %}" class="btn btn-primary">
-                        Back to Dashboard
-                    </a>
-                </div>
-            </div>
-            {% else %}
-           
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
+            <div class="card-body">
                 
-           
-                <div class="mb-4">
-                    <label for="{{ form.skill.id_for_label }}" class="form-label fw-medium">Select Skill</label>
-                    {{ form.skill }}
-                    {% if form.skill.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.skill.errors }}
-                    </div>
-                    {% endif %}
+                {% if existing_needs %}
+                <div class="alert alert-info mb-4">
+                    <h5><i class="bi bi-check-circle"></i> Skills You're Already Requesting:</h5>
+                    <ul class="mb-0">
+                        {% for need in existing_needs %}
+                        <li>{{ need.skill.skill }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
-
-              
-                <div class="mb-4">
-                    <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">Description</label>
-                    {{ form.description }}
-                    <div class="form-text">Be specific about what you need help with</div>
-                </div>
-
-          
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label for="{{ form.urgency.id_for_label }}" class="form-label fw-medium">Urgency</label>
-                        {{ form.urgency }}
+                {% endif %}
+                
+                {% if form.skill.field.queryset.count == 0 %}
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-exclamation-triangle"></i> No New Skills Available</h5>
+                    <p>You're already requesting all available skills. If you want to request a new skill:</p>
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Suggest New Skill
+                        </a>
+                        <a href="{% url 'skills:manage_needed_skills' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil"></i> Manage Existing Requests
+                        </a>
                     </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.max_hourly_rate.id_for_label }}" class="form-label fw-medium">Maximum Rate (Optional)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            {{ form.max_hourly_rate }}
+                </div>
+                {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.skill.id_for_label }}" class="form-label">
+                            <i class="bi bi-tools"></i> Select a Skill to Request
+                        </label>
+                        {{ form.skill }}
+                        {% if form.skill.errors %}
+                        <div class="text-danger">{{ form.skill.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="bi bi-card-text"></i> Description
+                        </label>
+                        {{ form.description }}
+                        <div class="form-text">Be specific about what you need help with</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.urgency.id_for_label }}" class="form-label">
+                                <i class="bi bi-clock"></i> Urgency
+                            </label>
+                            {{ form.urgency }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.max_hourly_rate.id_for_label }}" class="form-label">
+                                <i class="bi bi-cash"></i> Maximum Rate (Optional)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.max_hourly_rate }}
+                            </div>
+                            <div class="form-text">Maximum you're willing to pay per hour</div>
                         </div>
                     </div>
-                </div>
-
-               
-                <div class="d-flex justify-content-between pt-3 border-top">
-                    <a href="{% url 'skills:dashboard' %}" class="btn btn-outline-secondary">
-                        Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary px-4">
-                        Request Skill
-                    </button>
-                </div>
-            </form>
-            {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'skills:dashboard' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Request Skill
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
-
-<style>
-
-    .form-control, .form-select {
-        border-radius: 6px;
-        padding: 0.6rem 0.75rem;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-    }
-    
-    .form-label {
-        margin-bottom: 0.5rem;
-    }
-    
-    .btn {
-        border-radius: 6px;
-        padding: 0.5rem 1.5rem;
-    }
-    
-    textarea.form-control {
-        min-height: 120px;
-        resize: vertical;
-    }
-</style>
-
 {% endblock %}

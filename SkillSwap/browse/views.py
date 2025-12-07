@@ -40,7 +40,7 @@ def browse_view(request : HttpRequest):
     
     #pagination      
     page_num = request.GET.get("page", 1)
-    paginator = Paginator(qs, 4)
+    paginator = Paginator(qs, 6)
     profiles_page = paginator.get_page(page_num)
     
     skills = Skill.objects.order_by("skill").all()

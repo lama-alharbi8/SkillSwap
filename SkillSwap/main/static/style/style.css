@@ -172,6 +172,13 @@ a {
     padding: 20px;
 }
 
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 15px;
+}
+
 /* form card */
 .user-form {
     background: #ffffff;
@@ -218,7 +225,7 @@ a {
     padding: 14px 16px;
     border: none;
     border-radius: 10px;
-    background: #111;
+    background-color:  #0d6efd;
     color: white;
     font-size: 15px;
     font-weight: 600;

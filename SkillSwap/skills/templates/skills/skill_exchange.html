@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+
+<body class="bg-light">
+
+<div class="container py-5">
+    <h1 class="mb-4">Skill Exchanges</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for exchange in exchanges %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ exchange.initiator.username }} ↔ {{ exchange.responder.username }}
+                    </h5>
+                    <p class="card-text">
+                        <strong>Exchange Type:</strong> {{ exchange.get_exchange_type_display }}<br>
+                        <strong>Status:</strong> 
+                        {% if exchange.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">{{ exchange.get_status_display }}</span>
+                        {% elif exchange.status == 'accepted' %}
+                            <span class="badge bg-success">{{ exchange.get_status_display }}</span>
+                        {% elif exchange.status == 'cancelled' %}
+                            <span class="badge bg-danger">{{ exchange.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-info text-dark">{{ exchange.get_status_display }}</span>
+                        {% endif %}
+                        <br>
+                        <strong>Skills:</strong> {{ exchange.skill_from_initiator.skill.skill }} ↔ {{ exchange.skill_from_responder.skill.skill }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Hours Required:</strong> {{ exchange.initiator_hours_required }} ↔ {{ exchange.responder_hours_required }}<br>
+                        <strong>Total Value:</strong> ${{ exchange.total_value }}
+                    </p>
+                </div>
+                <div class="card-footer text-end">
+                    <small class="text-muted">Created: {{ exchange.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>No exchanges found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

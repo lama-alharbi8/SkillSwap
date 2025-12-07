@@ -17,74 +17,8 @@
 
        
 
-        <button type="submit" class="btn submit-btn">Sign up</button>
+        <button type="submit" class="submit-btn">Sign up</button>
     </form>
 </div>
-
-
-<!-- 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const level1 = document.getElementById('level1');
-    const level2 = document.getElementById('level2');
-    const level3 = document.getElementById('level3');
-    const skill = document.getElementById('skill');
-
-    function clearSelect(select) {
-        select.innerHTML = '<option value="">-- Select --</option>';
-    }
-
-    level1.addEventListener('change', function() {
-        clearSelect(level2);
-        clearSelect(level3);
-        clearSelect(skill);
-        if(!this.value) return;
-
-        fetch(`/accounts/ajax/categories/${this.value}/children/`)
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = c.category;
-                    level2.appendChild(option);
-                });
-            });
-    });
-
-    level2.addEventListener('change', function() {
-        clearSelect(level3);
-        clearSelect(skill);
-        if(!this.value) return;
-
-        fetch(`/accounts/ajax/categories/${this.value}/children/`)
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = c.category;
-                    level3.appendChild(option);
-                });
-            });
-    });
-
-    level3.addEventListener('change', function() {
-        clearSelect(skill);
-        if(!this.value) return;
-
-        fetch(`/accounts/ajax/categories/${this.value}/skills/`)
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(s => {
-                    const option = document.createElement('option');
-                    option.value = s.id;
-                    option.textContent = s.skill;
-                    skill.appendChild(option);
-                });
-            });
-    });
-});
-</script> -->
 
 {% endblock %}
