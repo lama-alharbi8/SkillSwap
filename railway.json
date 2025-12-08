@@ -4,6 +4,6 @@
         "builder": "NIXPACKS"
     },
     "deploy": {
-        "startCommand": "cd SkillSwap && python manage.py migrate && paython manage.py loaddata initial_data.json && python manage.py collectstatic--noinput && gunicorn SkillSwap.wsgi"
+        "startCommand": "cd SkillSwap && python manage.py migrate && python manage.py loaddata initial_data.json && python manage.py collectstatic--noinput && gunicorn SkillSwap.wsgi"
     }
 }
